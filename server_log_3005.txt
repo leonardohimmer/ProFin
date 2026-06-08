@@ -1,0 +1,408 @@
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3005
+- Network:       http://192.168.100.56:3005
+- Environments: .env
+✓ Ready in 17.2s
+○ Compiling proxy ...
+
+○ Compiling /login ...
+
+-----
+[1m[31mFATAL[39m[0m: An unexpected Turbopack error occurred. A panic log has been written to C:\Users\leona\AppData\Local\Temp\next-panic-1206b148873a4d4a6d85dfa08a02765a.log.
+
+To help make Turbopack better, report this error by clicking here: https://bugs.nextjs.org/search?category=turbopack-error-report&title=Turbopack%20Error%3A%20failed%20to%20create%20junction%20point%20at%20%22G%3A%5C%5CMeu%20Drive%5C%5CAntigravity%20projetos%5C%5Cantigravity%5C%5Cscratch%5C%5Cgestao_financeira%5C%5C.next%5C%5Cdev%5C%5Cnode_modules%5C%5C%40prisma%5C%5Cclient-2c3a283f134fdcb6%22%20pointing%20to%20%22G%3A%5C%5CMeu%20Drive%5C%5CAntigravity%20projetos%5C%5Cantigravity%5C%5Cscratch%5C%5Cgestao_financeira%5C%5C.next%5C%5Cdev%5C%5Cnode_modules%5C%5C%40prisma%5C%5C..%5C%5C..%5C%5C..%5C%5C..%5C%5Cnode_modules%5C%5C%40prisma%5C%5Cclient%22&body=Turbopack%20version%3A%20%60ee6e79b1%60%0ANext.js%20version%3A%20%600.0.0%60%0A%0AError%20message%3A%0A%60%60%60%0Afailed%20to%20create%20junction%20point%20at%20%22G%3A%5C%5CMeu%20Drive%5C%5CAntigravity%20projetos%5C%5Cantigravity%5C%5Cscratch%5C%5Cgestao_financeira%5C%5C.next%5C%5Cdev%5C%5Cnode_modules%5C%5C%40prisma%5C%5Cclient-2c3a283f134fdcb6%22%20pointing%20to%20%22G%3A%5C%5CMeu%20Drive%5C%5CAntigravity%20projetos%5C%5Cantigravity%5C%5Cscratch%5C%5Cgestao_financeira%5C%5C.next%5C%5Cdev%5C%5Cnode_modules%5C%5C%40prisma%5C%5C..%5C%5C..%5C%5C..%5C%5C..%5C%5Cnode_modules%5C%5C%40prisma%5C%5Cclient%22%0A%0ACaused%20by%3A%0A-%20creation%20of%20a%20new%20symbolic%20link%20or%20junction%20point%20failed%3A%20Fun%C3%A7%C3%A3o%20incorreta.%20%28os%20error%201%29%0A-%20Fun%C3%A7%C3%A3o%20incorreta.%20%28os%20error%201%29%0A%60%60%60&labels=Turbopack,Turbopack%20Panic%20Backtrace
+-----
+
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+○ Compiling /_error ...
+
+-----
+[1m[31mFATAL[39m[0m: An unexpected Turbopack error occurred. A panic log has been written to C:\Users\leona\AppData\Local\Temp\next-panic-1206b148873a4d4a6d85dfa08a02765a.log.
+
+To help make Turbopack better, report this error by clicking here: https://bugs.nextjs.org/search?category=turbopack-error-report&title=Turbopack%20Error%3A%20failed%20to%20create%20junction%20point%20at%20%22G%3A%5C%5CMeu%20Drive%5C%5CAntigravity%20projetos%5C%5Cantigravity%5C%5Cscratch%5C%5Cgestao_financeira%5C%5C.next%5C%5Cdev%5C%5Cnode_modules%5C%5C%40prisma%5C%5Cclient-2c3a283f134fdcb6%22%20pointing%20to%20%22G%3A%5C%5CMeu%20Drive%5C%5CAntigravity%20projetos%5C%5Cantigravity%5C%5Cscratch%5C%5Cgestao_financeira%5C%5C.next%5C%5Cdev%5C%5Cnode_modules%5C%5C%40prisma%5C%5C..%5C%5C..%5C%5C..%5C%5C..%5C%5Cnode_modules%5C%5C%40prisma%5C%5Cclient%22&body=Turbopack%20version%3A%20%60ee6e79b1%60%0ANext.js%20version%3A%20%600.0.0%60%0A%0AError%20message%3A%0A%60%60%60%0Afailed%20to%20create%20junction%20point%20at%20%22G%3A%5C%5CMeu%20Drive%5C%5CAntigravity%20projetos%5C%5Cantigravity%5C%5Cscratch%5C%5Cgestao_financeira%5C%5C.next%5C%5Cdev%5C%5Cnode_modules%5C%5C%40prisma%5C%5Cclient-2c3a283f134fdcb6%22%20pointing%20to%20%22G%3A%5C%5CMeu%20Drive%5C%5CAntigravity%20projetos%5C%5Cantigravity%5C%5Cscratch%5C%5Cgestao_financeira%5C%5C.next%5C%5Cdev%5C%5Cnode_modules%5C%5C%40prisma%5C%5C..%5C%5C..%5C%5C..%5C%5C..%5C%5Cnode_modules%5C%5C%40prisma%5C%5Cclient%22%0A%0ACaused%20by%3A%0A-%20creation%20of%20a%20new%20symbolic%20link%20or%20junction%20point%20failed%3A%20Fun%C3%A7%C3%A3o%20incorreta.%20%28os%20error%201%29%0A-%20Fun%C3%A7%C3%A3o%20incorreta.%20%28os%20error%201%29%0A%60%60%60&labels=Turbopack,Turbopack%20Panic%20Backtrace
+-----
+
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[Server HMR] Subscription error: Error [TurbopackInternalError]: failed to create junction point at "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\client-2c3a283f134fdcb6" pointing to "G:\\Meu Drive\\Antigravity projetos\\antigravity\\scratch\\gestao_financeira\\.next\\dev\\node_modules\\@prisma\\..\\..\\..\\..\\node_modules\\@prisma\\client"
+
+Caused by:
+- creation of a new symbolic link or junction point failed: Função incorreta. (os error 1)
+- Função incorreta. (os error 1)
+    at ignore-listed frames {
+  location: undefined
+}
+[?25h

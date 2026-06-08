@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      String   @default("OPERATOR") // ADMIN, MANAGER, OPERATOR
+  password  String   // Hashed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts  Account[]
+  categories Category[]
+}
+
+
+model Account {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  // We don't store balance here to enforce append-only ledger architecture!
+  // Balance is calculated from LedgerEntries
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entries   LedgerEntry[]
+}
+
+model Transaction {
+  id              String   @id @default(cuid())
+  idempotencyKey  String?  @unique
+  description     String
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id])
+  categoryName    String    @default("OUTROS") // Fallback
+  contact         String?
+  paymentType     String   @default("A VISTA")
+  paymentMethod   String   @default("INDEFINIDO")
+  isPaid          Boolean  @default(true)
+  status          String   @default("COMPLETED")
+  createdAt       DateTime @default(now())
+
+  entries         LedgerEntry[]
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String
+  parentId  String?
+  parent    Category?  @relation("SubCategories", fields: [parentId], references: [id])
+  children  Category[] @relation("SubCategories")
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+  
+  transactions Transaction[]
+
+  @@unique([name, userId, parentId])
+}
+
+
+
+
+model LedgerEntry {
+  id            String   @id @default(cuid())
+  accountId     String
+  account       Account  @relation(fields: [accountId], references: [id])
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  
+  // Stored in cents to avoid floating point issues (e.g. 1000 = $10.00)
+  amount        Int
+  type          String   // CREDIT or DEBIT
+  
+  createdAt     DateTime @default(now())
+
+  @@index([accountId])
+  @@index([transactionId])
+}

@@ -1,0 +1,117 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import "./styles.css";
+import prisma from "@/lib/prisma";
+import { headers } from "next/headers";
+import { formatCurrency } from "@/lib/math";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeToggle } from "@/components/ThemeToggle";
+
+export const metadata: Metadata = {
+  title: "Sistema de Gestão Financeira",
+  description: "Sistema robusto para gestão financeira com arquitetura Ledger",
+};
+
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const headerList = await headers();
+  const userId = headerList.get("x-user-id");
+  
+  let userName = "Usuário";
+  let balance = 0;
+
+  if (userId) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (user) userName = user.name;
+
+    const entries = await prisma.ledgerEntry.findMany({
+      where: { account: { userId: userId } }
+    });
+    
+    entries.forEach(e => {
+      if (e.type === 'CREDIT') balance += e.amount;
+      else balance -= e.amount;
+    });
+  }
+
+  return (
+
+    <html lang="pt-BR">
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <div className="app-layout">
+            {/* Sidebar */}
+            <aside className="sidebar">
+              <div className="logo-container" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ width: 32, height: 32, background: 'var(--primary)', borderRadius: 8 }}></div>
+                  <h1 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--primary)', margin: 0 }}>procfy</h1>
+                </div>
+                <ThemeToggle />
+              </div>
+
+            <div style={{ padding: '0 0.5rem', marginBottom: '2rem' }}>
+              <p style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{userName}</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>Conta Pessoal</p>
+            </div>
+
+            
+            <nav className="nav-menu">
+              <Link href="/" className="nav-item">Página inicial</Link>
+              <Link href="/transacoes" className="nav-item">Transações</Link>
+              <Link href="/contatos" className="nav-item">Contatos</Link>
+              <Link href="/relatorios" className="nav-item">Relatórios</Link>
+            </nav>
+
+
+            <div style={{ marginTop: 'auto' }}>
+              <nav className="nav-menu">
+                <Link href="/importacoes" className="nav-item">Importações</Link>
+                <Link href="/conciliacoes" className="nav-item">Conciliações</Link>
+              </nav>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <div className="main-content">
+            <header className="header-banner">
+              <span>Seu período de avaliação termina em 7 dias</span>
+              <button style={{ color: 'var(--primary)', fontWeight: 'bold', background: 'none', border: 'none' }}>Falar com especialista</button>
+            </header>
+            <main>{children}</main>
+          </div>
+
+          {/* Right Panel */}
+          <aside className="right-panel">
+            <div className="account-card">
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Conta Principal</p>
+              <h2 style={{ fontSize: '1.2rem', margin: '0.5rem 0' }}>Saldo: {formatCurrency(balance)}</h2>
+              <Link href="/transacoes/nova" className="btn-primary" style={{ display: 'block', marginTop: '1rem' }}>
+                + Nova Transação
+              </Link>
+            </div>
+
+
+            <div style={{ padding: '1rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+              <h3 style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>Calendário</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', textAlign: 'center', fontSize: '0.8rem' }}>
+                {['S','T','Q','Q','S','S','D'].map(d => <span key={d} style={{ color: 'var(--text-tertiary)' }}>{d}</span>)}
+                {Array.from({length: 31}).map((_, i) => (
+                  <span key={i} style={{ padding: '0.2rem', background: i === 7 ? 'var(--primary)' : 'transparent', color: i === 7 ? 'white' : 'inherit', borderRadius: '50%' }}>
+                    {i + 1}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </div>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+
+

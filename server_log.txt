@@ -1,0 +1,18 @@
+
+> gestao_financeira@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.100.56:3000
+- Environments: .env
+✓ Ready in 84s
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3005
+- PID:          27656
+- Dir:          G:\Meu Drive\Antigravity projetos\antigravity\scratch\gestao_financeira
+- Log:          .next\dev\logs\next-development.log
+
+Run taskkill /PID 27656 /F to stop it.
+[?25h
