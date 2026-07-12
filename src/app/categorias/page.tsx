@@ -2,10 +2,12 @@ import React from "react";
 import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import CategoriesView from "@/components/CategoriesView";
+import { ensureDatabaseInitialized } from "@/lib/db-init";
 
 export const dynamic = "force-dynamic";
 
 export default async function CategoriasPage() {
+  await ensureDatabaseInitialized();
   const headerList = await headers();
   const userId = headerList.get("x-user-id") || "test-user-id";
 

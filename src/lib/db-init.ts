@@ -154,6 +154,58 @@ export async function ensureDatabaseInitialized() {
       console.log("Usuário padrão criado pelo ensureDatabaseInitialized!");
     }
 
+    // Garante que todas as 19 categorias de Despesas e 7 de Receitas existam para o usuário de teste/padrão no banco atual
+    const defaultCategories = [
+      // DESPESAS (19 categorias da foto)
+      { name: "Carro", type: "DEBIT" },
+      { name: "Celular", type: "DEBIT" },
+      { name: "Combustível", type: "DEBIT" },
+      { name: "Educação", type: "DEBIT" },
+      { name: "Eletrônicos", type: "DEBIT" },
+      { name: "Energia", type: "DEBIT" },
+      { name: "Farmácia", type: "DEBIT" },
+      { name: "IPTU", type: "DEBIT" },
+      { name: "Lazer", type: "DEBIT" },
+      { name: "Mercado", type: "DEBIT" },
+      { name: "Moradia", type: "DEBIT" },
+      { name: "Pagamentos", type: "DEBIT" },
+      { name: "Pet", type: "DEBIT" },
+      { name: "PIX", type: "DEBIT" },
+      { name: "Presentes", type: "DEBIT" },
+      { name: "Roupa", type: "DEBIT" },
+      { name: "Saúde", type: "DEBIT" },
+      { name: "Vestuário", type: "DEBIT" },
+      { name: "Água", type: "DEBIT" },
+      // RECEITAS (7 categorias)
+      { name: "Salário", type: "CREDIT" },
+      { name: "Investimentos", type: "CREDIT" },
+      { name: "Freelance", type: "CREDIT" },
+      { name: "Prêmios", type: "CREDIT" },
+      { name: "Cashback", type: "CREDIT" },
+      { name: "Rendimentos", type: "CREDIT" },
+      { name: "Outras Receitas", type: "CREDIT" }
+    ];
+
+    for (const cat of defaultCategories) {
+      const existing = await prisma.category.findFirst({
+        where: { name: cat.name, userId: defaultUserId }
+      });
+      if (!existing) {
+        await prisma.category.create({
+          data: {
+            name: cat.name,
+            type: cat.type,
+            userId: defaultUserId
+          }
+        });
+      } else if (existing.type !== cat.type) {
+        await prisma.category.update({
+          where: { id: existing.id },
+          data: { type: cat.type }
+        });
+      }
+    }
+
     globalThis.isDbInitialized = true;
   } catch (error) {
     console.error("Erro na auto-inicialização do banco de dados:", error);

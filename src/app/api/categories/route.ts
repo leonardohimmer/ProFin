@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
+import { ensureDatabaseInitialized } from "@/lib/db-init";
 
 export async function GET() {
   try {
+    await ensureDatabaseInitialized();
     const headerList = await headers();
     const userId = headerList.get("x-user-id") || "test-user-id";
 
