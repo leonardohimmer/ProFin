@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
+import { execSync } from "child_process";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    // Sincroniza o banco de dados (cria tabelas se não existirem) no runtime da Vercel
+    console.log("Executando prisma db push em runtime...");
+    execSync("npx prisma db push --accept-data-loss");
+    console.log("Banco de dados sincronizado com sucesso!");
+
     const defaultUserId = "test-user-id";
     const defaultUserEmail = "joao@gestao.com";
 
