@@ -59,6 +59,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )
     },
     {
+      name: "Contas",
+      href: "/contas",
+      icon: (
+        <svg className="nav-item-icon" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.339a.75.75 0 00-.224-.53L12 3.82l-7.276 6.02a.75.75 0 00-.224.53V21H3v1.5h18V21h-1.5z"></path>
+        </svg>
+      )
+    },
+    {
       name: "Categorias",
       href: "/categorias",
       icon: (
