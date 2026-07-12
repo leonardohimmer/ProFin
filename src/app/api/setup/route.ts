@@ -95,22 +95,36 @@ export async function GET() {
       accountsMap[acc.name] = account;
     }
 
-    // 4. Cria as categorias padrão de Alexandre Silva
+    // 4. Cria as categorias padrão de Alexandre Silva (Conforme Imagens Despesas e Receitas)
     const categoriesList = [
-      { name: "Mercado" },
-      { name: "Moradia" },
-      { name: "Pagamentos" },
-      { name: "Pet" },
-      { name: "PIX" },
-      { name: "Presentes" },
-      { name: "Roupa" },
-      { name: "Saúde" },
-      { name: "Vestuário" },
-      { name: "Água" },
-      { name: "Carro" },
-      { name: "Alimentação" },
-      { name: "Lazer" },
-      { name: "Transporte" }
+      // DESPESAS
+      { name: "Carro", type: "DEBIT" },
+      { name: "Celular", type: "DEBIT" },
+      { name: "Combustível", type: "DEBIT" },
+      { name: "Educação", type: "DEBIT" },
+      { name: "Eletrônicos", type: "DEBIT" },
+      { name: "Energia", type: "DEBIT" },
+      { name: "Farmácia", type: "DEBIT" },
+      { name: "IPTU", type: "DEBIT" },
+      { name: "Lazer", type: "DEBIT" },
+      { name: "Mercado", type: "DEBIT" },
+      { name: "Moradia", type: "DEBIT" },
+      { name: "Pagamentos", type: "DEBIT" },
+      { name: "Pet", type: "DEBIT" },
+      { name: "PIX", type: "DEBIT" },
+      { name: "Presentes", type: "DEBIT" },
+      { name: "Roupa", type: "DEBIT" },
+      { name: "Saúde", type: "DEBIT" },
+      { name: "Vestuário", type: "DEBIT" },
+      { name: "Água", type: "DEBIT" },
+      // RECEITAS
+      { name: "Salário", type: "CREDIT" },
+      { name: "Investimentos", type: "CREDIT" },
+      { name: "Freelance", type: "CREDIT" },
+      { name: "Prêmios", type: "CREDIT" },
+      { name: "Cashback", type: "CREDIT" },
+      { name: "Rendimentos", type: "CREDIT" },
+      { name: "Outras Receitas", type: "CREDIT" }
     ];
 
     const categoriesMap: Record<string, any> = {};
@@ -119,6 +133,7 @@ export async function GET() {
       const category = await prisma.category.create({
         data: {
           name: cat.name,
+          type: cat.type,
           userId: defaultUserId
         }
       });
@@ -240,6 +255,7 @@ export async function GET() {
       data: {
         description: "Amazon.com.br",
         categoryName: "Eletrônicos",
+        categoryId: categoriesMap["Eletrônicos"]?.id,
         paymentType: "A VISTA",
         paymentMethod: "Premium Visa", // Identifica o cartão
         isPaid: true,
@@ -263,7 +279,8 @@ export async function GET() {
     const starbucksTx = await prisma.transaction.create({
       data: {
         description: "Starbucks Coffee",
-        categoryName: "Alimentação",
+        categoryName: "Mercado",
+        categoryId: categoriesMap["Mercado"]?.id,
         paymentType: "A VISTA",
         paymentMethod: "Premium Visa",
         isPaid: true,
@@ -288,7 +305,8 @@ export async function GET() {
     const netflixTx = await prisma.transaction.create({
       data: {
         description: "Netflix Mensalidade",
-        categoryName: "Entretenimento",
+        categoryName: "Lazer",
+        categoryId: categoriesMap["Lazer"]?.id,
         paymentType: "A VISTA",
         paymentMethod: "Business Elite",
         isPaid: true,

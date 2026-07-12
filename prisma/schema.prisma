@@ -62,6 +62,7 @@ model Transaction {
 model Category {
   id        String     @id @default(cuid())
   name      String
+  type      String     @default("DEBIT") // "DEBIT" (Despesas) | "CREDIT" (Receitas)
   parentId  String?
   parent    Category?  @relation("SubCategories", fields: [parentId], references: [id])
   children  Category[] @relation("SubCategories")

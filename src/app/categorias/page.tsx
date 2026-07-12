@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import CategoriesView from "@/components/CategoriesView";
 
+export const dynamic = "force-dynamic";
+
 export default async function CategoriasPage() {
   const headerList = await headers();
   const userId = headerList.get("x-user-id") || "test-user-id";
@@ -25,6 +27,7 @@ export default async function CategoriasPage() {
   const formattedCategories = categories.map(cat => ({
     id: cat.id,
     name: cat.name,
+    type: cat.type || "DEBIT",
     transactionsCount: cat.transactions.length
   }));
 

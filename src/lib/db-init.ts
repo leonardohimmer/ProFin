@@ -32,6 +32,7 @@ export async function ensureDatabaseInitialized() {
       `CREATE TABLE IF NOT EXISTS "Category" (
         "id" TEXT NOT NULL PRIMARY KEY,
         "name" TEXT NOT NULL,
+        "type" TEXT NOT NULL DEFAULT 'DEBIT',
         "parentId" TEXT,
         "userId" TEXT NOT NULL,
         CONSTRAINT "Category_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "Category" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
@@ -118,6 +119,12 @@ export async function ensureDatabaseInitialized() {
 
     for (const sql of statements) {
       await prisma.$executeRawUnsafe(sql);
+    }
+
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Category" ADD COLUMN "type" TEXT NOT NULL DEFAULT 'DEBIT';`);
+    } catch (e) {
+      // Coluna já existente em bancos que foram migrados previamente
     }
 
     const defaultUserId = "test-user-id";
