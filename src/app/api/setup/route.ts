@@ -459,11 +459,8 @@ export async function GET() {
       goals: 2,
       investments: 3
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Erro no setup:", error);
-    return NextResponse.json({ 
-      error: "Erro ao configurar ambiente",
-      details: error.message || String(error)
-    }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao configurar ambiente" }, { status: 500 });
   }
 }
