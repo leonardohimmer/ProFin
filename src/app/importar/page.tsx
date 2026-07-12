@@ -1,13 +1,12 @@
 import React from "react";
 import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
-import NewTransactionView from "@/components/NewTransactionView";
+import ImporterView from "@/components/ImporterView";
 
-export default async function NovaTransacaoPage() {
+export default async function ImportarPage() {
   const headerList = await headers();
   const userId = headerList.get("x-user-id") || "test-user-id";
 
-  // Busca as categorias e contas vinculadas ao usuário
   const categories = await prisma.category.findMany({
     where: { userId: userId },
     orderBy: { name: "asc" }
@@ -29,10 +28,6 @@ export default async function NovaTransacaoPage() {
   }));
 
   return (
-    <NewTransactionView
-      categories={formattedCategories}
-      accounts={formattedAccounts}
-      defaultType="DEBIT"
-    />
+    <ImporterView categories={formattedCategories} accounts={formattedAccounts} />
   );
 }

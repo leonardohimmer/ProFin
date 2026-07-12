@@ -10,48 +10,85 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const { description, amount, type, categoryId, category, contact, paymentType, paymentMethod } = await request.json();
+    const { description, amount, type, accountId, destinationAccountId, categoryId, category, contact, paymentType, paymentMethod } = await request.json();
 
     if (!description || !amount || !type) {
       return NextResponse.json({ error: "Dados incompletos" }, { status: 400 });
     }
 
-    const account = await prisma.account.findFirst({
-      where: { userId: userId }
-    });
-
-    if (!account) {
-      return NextResponse.json({ error: "Conta não encontrada" }, { status: 404 });
-    }
-
     const amountInCents = toCents(amount);
 
     const result = await prisma.$transaction(async (tx) => {
-      const transaction = await tx.transaction.create({
-        data: {
-          description,
-          categoryId: categoryId || null,
-          categoryName: category || "OUTROS",
-          contact,
-          paymentType: paymentType || "A VISTA",
-          paymentMethod: paymentMethod || "INDEFINIDO",
-          status: "COMPLETED",
-          entries: {
-            create: {
-              accountId: account.id,
-              amount: amountInCents,
-              type: type
+      let targetAccountId = accountId;
+
+      if (!targetAccountId) {
+        const firstAccount = await tx.account.findFirst({
+          where: { userId: userId }
+        });
+        if (!firstAccount) {
+          throw new Error("Conta não encontrada");
+        }
+        targetAccountId = firstAccount.id;
+      }
+
+      if (type === "TRANSFER") {
+        if (!destinationAccountId) {
+          throw new Error("Conta de destino é necessária para transferência");
+        }
+
+        const transaction = await tx.transaction.create({
+          data: {
+            description,
+            categoryId: categoryId || null,
+            categoryName: category || "Transferência",
+            contact,
+            paymentType: "A VISTA",
+            paymentMethod: "TRANSFERENCIA",
+            status: "COMPLETED",
+            entries: {
+              create: [
+                {
+                  accountId: targetAccountId,
+                  amount: amountInCents,
+                  type: "DEBIT" // Debita da conta de origem
+                },
+                {
+                  accountId: destinationAccountId,
+                  amount: amountInCents,
+                  type: "CREDIT" // Credita na conta de destino
+                }
+              ]
             }
           }
-        }
-      });
-      return transaction;
+        });
+        return transaction;
+      } else {
+        const transaction = await tx.transaction.create({
+          data: {
+            description,
+            categoryId: categoryId || null,
+            categoryName: category || "OUTROS",
+            contact,
+            paymentType: paymentType || "A VISTA",
+            paymentMethod: paymentMethod || "INDEFINIDO",
+            status: "COMPLETED",
+            entries: {
+              create: {
+                accountId: targetAccountId,
+                amount: amountInCents,
+                type: type // CREDIT (Receita) ou DEBIT (Despesa)
+              }
+            }
+          }
+        });
+        return transaction;
+      }
     });
 
     return NextResponse.json({ success: true, transaction: result });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro ao criar transação:", error);
-    return NextResponse.json({ error: "Erro interno ao salvar transação" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Erro interno ao salvar transação" }, { status: 500 });
   }
 }
 

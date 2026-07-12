@@ -21,6 +21,10 @@ model User {
 
   accounts  Account[]
   categories Category[]
+  cards     Card[]
+  budgets   Budget[]
+  goals     Goal[]
+  investments Investment[]
 }
 
 
@@ -86,4 +90,56 @@ model LedgerEntry {
 
   @@index([accountId])
   @@index([transactionId])
+}
+
+model Card {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  name            String   // e.g. "Premium Visa", "Business Elite"
+  type            String   // e.g. "CREDIT", "DEBIT"
+  cardNumber      String   // e.g. "•••• •••• •••• 4829"
+  expirationDate  String   // e.g. "08/28"
+  holderName      String   // e.g. "ALEX SILVA"
+  limit           Int      // in cents
+  currentInvoice  Int      // in cents
+  dueDate         String   // e.g. "15 Out"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Budget {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  categoryName  String   // e.g. "Alimentação", "Lazer", "Transporte", "Moradia"
+  targetAmount  Int      // in cents
+  spentAmount   Int      // in cents
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Goal {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  name          String    // e.g. "Reserva de Emergência", "Viagem"
+  targetAmount  Int       // in cents
+  currentAmount Int       // in cents
+  deadline      DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Investment {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  name          String   // e.g. "Tesouro Selic 2029", "PETR4", "Bitcoin"
+  type          String   // e.g. "RENDA_FIXA", "ACOES", "FII", "CRIPTOMOEDAS"
+  purchaseValue Int      // in cents (historical cost)
+  currentValue  Int      // in cents (market value)
+  quantity      Float    @default(1.0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
