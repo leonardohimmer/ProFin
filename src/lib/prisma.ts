@@ -1,10 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 
-// Configura fallback automático para a variável DATABASE_URL se ela estiver ausente
+// Configura fallback programático com as URLs do Supabase (PostgreSQL) caso não estejam no process.env
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = process.env.NODE_ENV === "production" 
-    ? "file:/tmp/dev.db" 
-    : "file:./dev.db";
+  process.env.DATABASE_URL = "postgresql://postgres.bswdsnbxlpgjdiddvdxi:mmcsgq-supabase26@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true";
+}
+if (!process.env.DIRECT_URL) {
+  process.env.DIRECT_URL = "postgresql://postgres.bswdsnbxlpgjdiddvdxi:mmcsgq-supabase26@aws-0-us-east-1.pooler.supabase.com:5432/postgres";
 }
 
 const prismaClientSingleton = () => {
