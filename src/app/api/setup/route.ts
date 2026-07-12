@@ -9,7 +9,7 @@ export async function GET() {
   try {
     // Sincroniza o banco de dados (cria tabelas se não existirem) no runtime da Vercel
     console.log("Executando prisma db push em runtime...");
-    execSync("npx prisma db push --accept-data-loss");
+    execSync("node ./node_modules/prisma/build/index.js db push --accept-data-loss");
     console.log("Banco de dados sincronizado com sucesso!");
 
     const defaultUserId = "test-user-id";
