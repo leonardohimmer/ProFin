@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { comparePassword, encryptJWT } from "@/lib/auth";
+import { ensureDatabaseInitialized } from "@/lib/db-init";
 
 export async function POST(request: Request) {
   try {
+    // Garante que as tabelas e o usuário padrão existam no banco antes de consultar
+    await ensureDatabaseInitialized();
+
     const { email, password } = await request.json();
 
     if (!email || !password) {
