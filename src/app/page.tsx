@@ -60,6 +60,7 @@ export default async function HomePage() {
 
     let monthlyIncome = 0;
     let monthlyExpenses = 0;
+    const expensesByCategory: Record<string, number> = {};
 
     monthEntries.forEach(entry => {
       // Ignora transações de ajuste inicial para coincidir com os valores zerados das imagens (R$ 0,00)
@@ -71,7 +72,35 @@ export default async function HomePage() {
         monthlyIncome += entry.amount;
       } else {
         monthlyExpenses += entry.amount;
+        const category = entry.transaction.categoryName || "OUTROS";
+        expensesByCategory[category] = (expensesByCategory[category] || 0) + entry.amount;
       }
+    });
+
+    const expensesByCategoryArray = Object.entries(expensesByCategory).map(([name, amount]) => ({
+      name,
+      amount
+    })).sort((a, b) => b.amount - a.amount);
+
+    const budgetsData = await prisma.budget.findMany({
+      where: { userId: userId }
+    });
+
+    const budgets = budgetsData.map(b => ({
+      ...b,
+      spentAmount: expensesByCategory[b.categoryName] || 0
+    }));
+
+    const cards = await prisma.card.findMany({
+      where: { userId: userId }
+    });
+
+    const goals = await prisma.goal.findMany({
+      where: { userId: userId }
+    });
+
+    const investments = await prisma.investment.findMany({
+      where: { userId: userId }
     });
 
     return (
@@ -80,6 +109,11 @@ export default async function HomePage() {
         accounts={accountsData}
         monthlyIncome={monthlyIncome}
         monthlyExpenses={monthlyExpenses}
+        expensesByCategory={expensesByCategoryArray}
+        budgets={budgets}
+        cards={cards}
+        goals={goals}
+        investments={investments}
       />
     );
   } catch (error) {
@@ -93,6 +127,11 @@ export default async function HomePage() {
         ]}
         monthlyIncome={0}
         monthlyExpenses={0}
+        expensesByCategory={[]}
+        budgets={[]}
+        cards={[]}
+        goals={[]}
+        investments={[]}
       />
     );
   }

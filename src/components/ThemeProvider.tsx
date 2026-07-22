@@ -8,7 +8,6 @@ type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: Theme;
   enableSystem?: boolean;
-  attribute?: string;
 };
 
 type ThemeProviderState = {
@@ -29,7 +28,6 @@ export function ThemeProvider({
   children,
   defaultTheme = "system",
   enableSystem = true,
-  attribute = "class",
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
@@ -66,6 +64,7 @@ export function ThemeProvider({
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as Theme | null;
     if (savedTheme) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme(savedTheme);
     }
   }, []);

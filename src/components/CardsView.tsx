@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import QuickAddMenu from "./QuickAddMenu";
 
 interface CardInfo {
   id: string;
@@ -95,12 +96,7 @@ export default function CardsView({ cards, transactions }: CardsViewProps) {
             </svg>
           </div>
 
-          <Link href="/transacoes/nova?type=CREDIT" className="btn-header btn-header-income" style={{ padding: "0.6rem 1rem", borderRadius: "10px" }}>
-            + Receita
-          </Link>
-          <Link href="/transacoes/nova?type=DEBIT" className="btn-header btn-header-expense" style={{ padding: "0.6rem 1rem", borderRadius: "10px" }}>
-            - Despesa
-          </Link>
+          <QuickAddMenu />
 
           <button className="header-icon-btn">
             <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 20, height: 20 }}>

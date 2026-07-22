@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import QuickAddMenu from "./QuickAddMenu";
 
 interface CategoryInfo {
   id: string;
@@ -447,12 +448,7 @@ export default function CategoriesView({ categories }: CategoriesViewProps) {
         </div>
 
         <div className="header-right">
-          <Link href="/transacoes/nova?type=CREDIT" className="btn-header btn-header-income">
-            Adicionar Receita
-          </Link>
-          <Link href="/transacoes/nova?type=DEBIT" className="btn-header btn-header-expense">
-            Adicionar Despesa
-          </Link>
+          <QuickAddMenu />
 
           <button className="header-icon-btn" onClick={handleOpenCreate} title="Criar Nova Categoria">
             <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 20, height: 20 }}>

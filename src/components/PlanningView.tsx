@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface BudgetInfo {
   id: string;
@@ -15,8 +16,14 @@ interface PlanningViewProps {
 }
 
 export default function PlanningView({ budgets: initialBudgets }: PlanningViewProps) {
+  const router = useRouter();
   const [budgets, setBudgets] = useState<BudgetInfo[]>(initialBudgets);
   const [activeMonth, setActiveMonth] = useState("Outubro");
+  
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
+  const [newAmount, setNewAmount] = useState("");
 
   const formatCurrency = (cents: number) => {
     const value = cents / 100;
@@ -31,29 +38,53 @@ export default function PlanningView({ budgets: initialBudgets }: PlanningViewPr
     return Math.round((spent / target) * 100);
   };
 
-  // Handler para atualizar a meta
-  const handleUpdateTarget = (id: string, deltaInCents: number) => {
-    setBudgets(prev => prev.map(b => {
-      if (b.id === id) {
-        const newTarget = Math.max(0, b.targetAmount + deltaInCents);
-        return {
-          ...b,
-          targetAmount: newTarget
-        };
-      }
-      return b;
-    }));
+  // Handlers para atualizar a meta
+  const handleTargetChange = (id: string, value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    setBudgets(prev => prev.map(b => b.id === id ? { ...b, targetAmount: Number(numericValue) * 100 } : b));
   };
 
-  // Calcula totais do planejamento
-  // Para fins estéticos, adicionamos um offset de orçamentos não listados para coincidir com o total de R$ 8.450,00 da tela
-  const targetOffset = 195000; // R$ 1.950,00
-  const spentOffset = 90850;   // R$ 908,50
+  const handleSaveTarget = async (id: string, targetAmount: number) => {
+    try {
+      await fetch("/api/budgets", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, targetAmount })
+      });
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  const totalPlanned = budgets.reduce((sum, b) => sum + b.targetAmount, 0) + targetOffset;
-  const totalSpent = budgets.reduce((sum, b) => sum + b.spentAmount, 0) + spentOffset;
+  const handleCreateBudget = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategory || !newAmount) return;
+
+    const targetAmount = Math.round(parseFloat(newAmount.replace(/\D/g, "")) * 100);
+
+    try {
+      const res = await fetch("/api/budgets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoryName: newCategory, targetAmount })
+      });
+      if (res.ok) {
+        setIsModalOpen(false);
+        setNewCategory("");
+        setNewAmount("");
+        router.refresh();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Calcula totais reais do planejamento baseados no banco
+  const totalPlanned = budgets.reduce((sum, b) => sum + b.targetAmount, 0);
+  const totalSpent = budgets.reduce((sum, b) => sum + b.spentAmount, 0);
   const totalAvailable = totalPlanned - totalSpent;
-  const globalPercent = Math.round((totalSpent / totalPlanned) * 100);
+  const globalPercent = totalPlanned > 0 ? Math.round((totalSpent / totalPlanned) * 100) : 0;
 
   const getAlertColorClass = (percent: number) => {
     if (percent >= 100) return "bar-alert-critical"; // Crítico (red)
@@ -132,12 +163,12 @@ export default function PlanningView({ budgets: initialBudgets }: PlanningViewPr
             </svg>
           </div>
 
-          <Link href="/transacoes/nova?type=CREDIT" className="btn-header btn-header-income" style={{ padding: "0.6rem 1rem", borderRadius: "10px" }}>
-            + Receita
-          </Link>
-          <Link href="/transacoes/nova?type=DEBIT" className="btn-header btn-header-expense" style={{ padding: "0.6rem 1rem", borderRadius: "10px" }}>
-            - Despesa
-          </Link>
+          <button onClick={() => setIsModalOpen(true)} className="btn-header" style={{ backgroundColor: "var(--primary)", color: "white", padding: "0.6rem 1.2rem", borderRadius: "10px", display: "flex", alignItems: "center", gap: "0.5rem", border: "none", cursor: "pointer", fontWeight: 600 }}>
+            <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 18, height: 18 }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+            </svg>
+            Novo Planejamento
+          </button>
         </div>
       </header>
 
@@ -301,32 +332,21 @@ export default function PlanningView({ budgets: initialBudgets }: PlanningViewPr
                   <strong>{formatCurrency(b.spentAmount)}</strong> de {formatCurrency(b.targetAmount)}
                 </div>
 
-                {/* Stepper target budget adjustments */}
-                <div style={{ display: "flex", flexDirection: "column" }}>
+                {/* Editable target budget adjustments */}
+                <div style={{ display: "flex", flexDirection: "column", minWidth: "120px" }}>
                   <span style={{ fontSize: "0.6rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "0.25rem", fontWeight: "600" }}>
                     Ajustar Meta
                   </span>
-                  <div className="budget-stepper-control">
-                    <button 
-                      type="button" 
-                      onClick={() => handleUpdateTarget(b.id, -5000)} // Reduz R$ 50,00
-                      className="budget-stepper-btn"
-                    >
-                      -
-                    </button>
+                  <div className="budget-stepper-control" style={{ display: "flex", alignItems: "center", gap: "0.25rem", padding: "0.4rem 0.6rem" }}>
+                    <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem", fontWeight: "600" }}>R$</span>
                     <input 
                       type="text" 
                       className="budget-stepper-value"
-                      readOnly
-                      value={(b.targetAmount / 100).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      style={{ width: "100%", background: "transparent", color: "var(--text-primary)", border: "none", outline: "none", textAlign: "left", fontSize: "0.9rem", fontWeight: "600" }}
+                      value={(b.targetAmount / 100).toString()}
+                      onChange={(e) => handleTargetChange(b.id, e.target.value)}
+                      onBlur={() => handleSaveTarget(b.id, b.targetAmount)}
                     />
-                    <button 
-                      type="button" 
-                      onClick={() => handleUpdateTarget(b.id, 5000)} // Aumenta R$ 50,00
-                      className="budget-stepper-btn"
-                    >
-                      +
-                    </button>
                   </div>
                 </div>
               </div>
@@ -343,6 +363,43 @@ export default function PlanningView({ budgets: initialBudgets }: PlanningViewPr
           </svg>
         </Link>
       </div>
+
+      {/* Modal for New Budget */}
+      {isModalOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ backgroundColor: "var(--bg-primary)", padding: "2rem", borderRadius: "12px", width: "90%", maxWidth: "400px", border: "1px solid var(--border)" }}>
+            <h2 style={{ fontSize: "1.2rem", marginBottom: "1.5rem" }}>Novo Planejamento</h2>
+            <form onSubmit={handleCreateBudget}>
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.5rem", color: "var(--text-secondary)" }}>Categoria</label>
+                <input 
+                  type="text" 
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  placeholder="Ex: Saúde, Educação"
+                  style={{ width: "100%", padding: "0.75rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--bg-secondary)", color: "var(--text-primary)", outline: "none" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.5rem", color: "var(--text-secondary)" }}>Meta (R$)</label>
+                <input 
+                  type="number" 
+                  value={newAmount}
+                  onChange={(e) => setNewAmount(e.target.value)}
+                  placeholder="Ex: 500"
+                  style={{ width: "100%", padding: "0.75rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--bg-secondary)", color: "var(--text-primary)", outline: "none" }}
+                  required
+                />
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem" }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: "0.5rem 1rem", border: "none", background: "transparent", color: "var(--text-secondary)", cursor: "pointer", fontWeight: "600" }}>Cancelar</button>
+                <button type="submit" style={{ padding: "0.5rem 1.5rem", border: "none", background: "var(--primary)", color: "white", borderRadius: "8px", cursor: "pointer", fontWeight: "600" }}>Salvar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

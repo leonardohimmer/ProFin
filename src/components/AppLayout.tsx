@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { ThemeToggle } from "./ThemeToggle";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [userName, setUserName] = useState("Alexandre Silva");
   const [userRole, setUserRole] = useState("PLANO PREMIUM");
+  const [isSpeedDialOpen, setIsSpeedDialOpen] = useState(false);
 
   useEffect(() => {
     // Busca informações do usuário autenticado para exibir na sidebar
@@ -162,9 +164,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="app-layout">
       {/* Sidebar */}
       <aside className="sidebar">
-        <div className="logo-container">
-          <div className="logo-title" style={{ fontSize: "1.75rem", fontWeight: "700", letterSpacing: "-0.5px" }}>ProFin</div>
-          <div className="logo-subtitle" style={{ fontSize: "0.7rem", fontWeight: "600", textTransform: "none", color: "var(--text-secondary)" }}>Premium Finance</div>
+        <div className="logo-container" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: "2.5rem", paddingLeft: "0.5rem" }}>
+          <div>
+            <div className="logo-title" style={{ fontSize: "1.75rem", fontWeight: "700", letterSpacing: "-0.5px" }}>ProFin</div>
+            <div className="logo-subtitle" style={{ fontSize: "0.7rem", fontWeight: "600", textTransform: "none", color: "var(--text-secondary)" }}>Premium Finance</div>
+          </div>
+          <ThemeToggle />
         </div>
 
         <nav className="nav-menu">
@@ -243,6 +248,97 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="main-content">
         {children}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="mobile-bottom-nav">
+        <Link href="/" className={`bottom-nav-item ${pathname === "/" ? "active" : ""}`}>
+          <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path>
+          </svg>
+          <span>Principal</span>
+        </Link>
+        <Link href="/transacoes" className={`bottom-nav-item ${pathname === "/transacoes" ? "active" : ""}`}>
+          <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+          </svg>
+          <span>Transações</span>
+        </Link>
+
+        {/* Speed Dial Overlay */}
+        {isSpeedDialOpen && (
+          <div className="speed-dial-overlay" onClick={() => setIsSpeedDialOpen(false)}>
+            <div className="speed-dial-menu" onClick={(e) => e.stopPropagation()}>
+              <Link href="/transacoes/nova?type=TRANSFER" className="speed-dial-item" onClick={() => setIsSpeedDialOpen(false)}>
+                <div className="speed-dial-icon" style={{ backgroundColor: "#1e293b", color: "var(--primary)" }}>
+                  <svg fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ width: 22, height: 22 }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                  </svg>
+                </div>
+                <span>Transferência</span>
+              </Link>
+
+              <Link href="/transacoes/nova?type=DEBIT" className="speed-dial-item" onClick={() => setIsSpeedDialOpen(false)}>
+                <div className="speed-dial-icon" style={{ backgroundColor: "#1e293b", color: "var(--danger)" }}>
+                  <svg fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ width: 22, height: 22 }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 4.5l-15 15m0 0h11.25m-11.25 0V8.25" />
+                  </svg>
+                </div>
+                <span>Despesa</span>
+              </Link>
+              
+              <Link href="/transacoes/nova?type=CREDIT_CARD" className="speed-dial-item" onClick={() => setIsSpeedDialOpen(false)}>
+                <div className="speed-dial-icon" style={{ backgroundColor: "#1e293b", color: "#0d9488" }}>
+                  <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 22, height: 22 }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                  </svg>
+                </div>
+                <span>Despesa<br/>cartão</span>
+              </Link>
+              
+              <Link href="/transacoes/nova?type=CREDIT" className="speed-dial-item" onClick={() => setIsSpeedDialOpen(false)}>
+                <div className="speed-dial-icon" style={{ backgroundColor: "#1e293b", color: "var(--success)" }}>
+                  <svg fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ width: 22, height: 22 }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                  </svg>
+                </div>
+                <span>Receita</span>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* The FAB wrapper */}
+        <div className="bottom-nav-fab-wrapper">
+          <button 
+            type="button" 
+            className={`bottom-nav-fab ${isSpeedDialOpen ? "fab-open" : ""}`}
+            onClick={() => setIsSpeedDialOpen(!isSpeedDialOpen)}
+          >
+            {isSpeedDialOpen ? (
+              <svg fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            ) : (
+              <svg fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+              </svg>
+            )}
+          </button>
+        </div>
+
+        <Link href="/planejamento" className={`bottom-nav-item ${pathname === "/planejamento" ? "active" : ""}`}>
+          <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <span>Planejamento</span>
+        </Link>
+        <Link href="/mais" className={`bottom-nav-item ${pathname === "/mais" ? "active" : ""}`}>
+          <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+          </svg>
+          <span>Mais</span>
+        </Link>
+      </nav>
     </div>
   );
 }

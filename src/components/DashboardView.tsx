@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import QuickAddMenu from "./QuickAddMenu";
 
 interface AccountInfo {
   id: string;
@@ -9,29 +10,67 @@ interface AccountInfo {
   balance: number;
 }
 
+interface BudgetInfo {
+  id: string;
+  categoryName: string;
+  targetAmount: number;
+  spentAmount: number;
+}
+
+interface CardInfo {
+  id: string;
+  name: string;
+  cardNumber: string;
+  limit: number;
+  currentInvoice: number;
+  dueDate: string;
+}
+
+interface GoalInfo {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+}
+
+interface InvestmentInfo {
+  id: string;
+  name: string;
+  currentValue: number;
+}
+
 interface DashboardViewProps {
   userName: string;
   accounts: AccountInfo[];
   monthlyIncome: number;
   monthlyExpenses: number;
+  expensesByCategory: { name: string; amount: number }[];
+  budgets: BudgetInfo[];
+  cards: CardInfo[];
+  goals: GoalInfo[];
+  investments: InvestmentInfo[];
 }
 
 export default function DashboardView({
   userName,
   accounts,
   monthlyIncome,
-  monthlyExpenses
+  monthlyExpenses,
+  expensesByCategory,
+  budgets,
+  cards,
+  goals,
+  investments
 }: DashboardViewProps) {
   const [showValues, setShowValues] = useState(true);
   const [activeCardTab, setActiveCardTab] = useState<"abertas" | "fechadas">("abertas");
 
-  // Filtra as contas normais e o cartão SX
-  const bankAccounts = accounts.filter(acc => acc.name !== "SX");
-  const creditCards = accounts.filter(acc => acc.name === "SX");
+  // Filtra as contas normais (Removemos a lógica manual do cartão SX já que agora usamos o modelo de Cartão)
+  const bankAccounts = accounts.filter(acc => !acc.name.includes("Cartão"));
 
   // Calcula totais
   const totalBankBalance = bankAccounts.reduce((acc, curr) => acc + curr.balance, 0);
-  const totalCreditCardBalance = creditCards.reduce((acc, curr) => acc + curr.balance, 0);
+  const totalCreditCardBalance = (cards || []).reduce((acc, curr) => acc + curr.currentInvoice, 0);
 
   const formatValue = (valueInCents: number) => {
     if (!showValues) return "R$ ••••";
@@ -90,12 +129,7 @@ export default function DashboardView({
         </div>
 
         <div className="header-right">
-          <Link href="/transacoes/nova?type=CREDIT" className="btn-header btn-header-income">
-            + Adicionar Receita
-          </Link>
-          <Link href="/transacoes/nova?type=DEBIT" className="btn-header btn-header-expense">
-            - Adicionar Despesa
-          </Link>
+          <QuickAddMenu />
 
           <button className="header-icon-btn">
             <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 20, height: 20 }}>
@@ -247,59 +281,184 @@ export default function DashboardView({
             </div>
 
             <div className="account-list">
-              {creditCards.map((acc) => (
-                <div className="account-row" key={acc.id}>
+              {cards && cards.length > 0 ? cards.map((card) => (
+                <div className="account-row" key={card.id}>
                   <div className="account-info-group">
                     <div className="card-logo">VISA</div>
                     <div className="account-name-group">
-                      <span className="account-name">{acc.name}</span>
-                      <span className="account-type">fecha em 30 jun., 2026</span>
+                      <span className="account-name">{card.name}</span>
+                      <span className="account-type">fecha em {card.dueDate} • final {card.cardNumber.slice(-4)}</span>
                     </div>
                   </div>
                   <div className="account-value-group">
-                    <span className="account-value">
-                      {formatValue(acc.balance)}
+                    <span className="account-value" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.2rem' }}>
+                      {formatValue(card.currentInvoice)}
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 400 }}>
+                        limite: {formatValue(card.limit)}
+                      </span>
                     </span>
                     <button className="account-add-btn">+</button>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", textAlign: "center", display: "block", padding: "1rem 0" }}>Nenhum cartão cadastrado.</span>
+              )}
             </div>
 
             <div className="panel-total-row">
-              <span>Total</span>
+              <span>Total das faturas</span>
               <span>{formatValue(totalCreditCardBalance)}</span>
+            </div>
+          </div>
+
+          {/* Card Investimentos */}
+          <div className="panel-card">
+            <div className="panel-header">
+              <span className="panel-title">Investimentos</span>
+              <Link href="/investimentos" style={{ fontSize: "0.75rem", color: "var(--primary)", textDecoration: "none", fontWeight: 600 }}>Ver tudo</Link>
+            </div>
+            
+            <div className="account-list" style={{ marginTop: "0.5rem" }}>
+              {investments && investments.length > 0 ? investments.slice(0, 3).map((inv) => (
+                <div className="account-row" key={inv.id}>
+                  <div className="account-info-group">
+                    <div className="account-icon-wrapper teal">
+                      <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 16, height: 16 }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"></path>
+                      </svg>
+                    </div>
+                    <div className="account-name-group">
+                      <span className="account-name">{inv.name}</span>
+                    </div>
+                  </div>
+                  <div className="account-value-group">
+                    <span className="account-value positive">
+                      {formatValue(inv.currentValue)}
+                    </span>
+                  </div>
+                </div>
+              )) : (
+                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", textAlign: "center", display: "block", padding: "1rem 0" }}>Nenhum investimento cadastrado.</span>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Right Column (Despesas por categoria) */}
+        {/* Right Column (Despesas por categoria e Planejamento) */}
         <div className="despesas-categorias-panel">
-          <div className="panel-card" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+          <div className="panel-card" style={{ display: "flex", flexDirection: "column", maxHeight: "400px", overflowY: "auto" }}>
             <div className="panel-header">
               <span className="panel-title">Despesas por categoria</span>
             </div>
 
-            <div className="empty-state-categories">
-              <div className="circle-chart-outline">
-                <div className="circle-chart-inner">
-                  <svg className="circle-chart-icon" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"></path>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"></path>
-                  </svg>
+            {expensesByCategory && expensesByCategory.length > 0 ? (
+              <div style={{ marginTop: "1rem", flex: 1 }}>
+                {expensesByCategory.map((cat) => {
+                  const maxExpense = Math.max(...expensesByCategory.map(e => e.amount), 1);
+                  return (
+                    <div key={cat.name} style={{ marginBottom: "1rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+                        <span style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>{cat.name}</span>
+                        <span style={{ fontSize: "0.85rem", fontWeight: "600" }}>{formatValue(cat.amount)}</span>
+                      </div>
+                      <div className="progress-bar-bg" style={{ height: "6px", backgroundColor: "var(--border)", borderRadius: "4px", overflow: "hidden" }}>
+                        <div className="progress-bar-fill" style={{ width: `${(cat.amount / maxExpense) * 100}%`, backgroundColor: "var(--primary)", height: "100%", borderRadius: "4px" }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state-categories" style={{ flex: 1, padding: "2rem 1rem" }}>
+                <div className="circle-chart-outline">
+                  <div className="circle-chart-inner">
+                    <svg className="circle-chart-icon" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"></path>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"></path>
+                    </svg>
+                  </div>
                 </div>
-              </div>
 
-              <div className="empty-state-title">
-                Opa! Você não tem despesas cadastradas esse mês.
-              </div>
-              <div className="empty-state-description">
-                Adicione seus gastos no mês atual para ver seus gráficos.
-              </div>
+                <div className="empty-state-title">
+                  Opa! Você não tem despesas cadastradas esse mês.
+                </div>
+                <div className="empty-state-description">
+                  Adicione seus gastos no mês atual para ver seus gráficos.
+                </div>
 
-              <Link href="/transacoes/nova?type=DEBIT" className="btn-empty-action" style={{ textDecoration: "none" }}>
-                Começar agora
-              </Link>
+                <Link href="/transacoes/nova?type=DEBIT" className="btn-empty-action" style={{ textDecoration: "none" }}>
+                  Começar agora
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <div className="panel-card" style={{ marginTop: "1.5rem" }}>
+            <div className="panel-header">
+              <span className="panel-title">Planejamento</span>
+              <Link href="/planejamento" style={{ fontSize: "0.75rem", color: "var(--primary)", textDecoration: "none", fontWeight: 600 }}>Ver tudo</Link>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", marginTop: "1rem" }}>
+              {budgets && budgets.length > 0 ? [...budgets].sort((a, b) => {
+                const percentA = a.targetAmount > 0 ? (a.spentAmount / a.targetAmount) : 0;
+                const percentB = b.targetAmount > 0 ? (b.spentAmount / b.targetAmount) : 0;
+                return percentB - percentA;
+              }).slice(0, 5).map(b => {
+                const rawPercent = b.targetAmount > 0 ? Math.round((b.spentAmount / b.targetAmount) * 100) : 0;
+                const percent = Math.min(100, rawPercent);
+                
+                let colorClass = "progress-bar-safe";
+                if (rawPercent >= 100) {
+                  colorClass = "progress-bar-critical-blink";
+                } else if (rawPercent >= 85) {
+                  colorClass = "progress-bar-warning";
+                } else if (rawPercent >= 60) {
+                  colorClass = "progress-bar-attention";
+                }
+
+                return (
+                  <div key={b.id}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+                      <span style={{ fontSize: "0.85rem", color: "var(--text-primary)", fontWeight: 500 }}>{b.categoryName}</span>
+                      <span style={{ fontSize: "0.85rem" }}>
+                        <strong style={{ color: "var(--text-primary)" }}>{formatValue(b.spentAmount)}</strong> de {formatValue(b.targetAmount)}
+                      </span>
+                    </div>
+                    <div className="progress-bar-bg" style={{ height: "6px", backgroundColor: "var(--border)", borderRadius: "4px", overflow: "hidden" }}>
+                      <div className={`progress-bar-fill ${colorClass}`} style={{ width: `${percent}%`, height: "100%", borderRadius: "4px" }} />
+                    </div>
+                  </div>
+                );
+              }) : (
+                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", textAlign: "center", display: "block", padding: "1rem 0" }}>Nenhum planejamento cadastrado.</span>
+              )}
+            </div>
+          </div>
+
+          <div className="panel-card" style={{ marginTop: "1.5rem" }}>
+            <div className="panel-header">
+              <span className="panel-title">Metas</span>
+              <Link href="/metas" style={{ fontSize: "0.75rem", color: "var(--primary)", textDecoration: "none", fontWeight: 600 }}>Ver tudo</Link>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", marginTop: "1rem" }}>
+              {goals && goals.length > 0 ? goals.slice(0, 3).map(g => {
+                const percent = g.targetAmount > 0 ? Math.min(100, Math.round((g.currentAmount / g.targetAmount) * 100)) : 0;
+                return (
+                  <div key={g.id}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+                      <span style={{ fontSize: "0.85rem", color: "var(--text-primary)", fontWeight: 500 }}>{g.name}</span>
+                      <span style={{ fontSize: "0.85rem" }}>
+                        <strong style={{ color: "var(--text-primary)" }}>{formatValue(g.currentAmount)}</strong> de {formatValue(g.targetAmount)}
+                      </span>
+                    </div>
+                    <div className="progress-bar-bg" style={{ height: "6px", backgroundColor: "var(--border)", borderRadius: "4px", overflow: "hidden" }}>
+                      <div className="progress-bar-fill" style={{ width: `${percent}%`, backgroundColor: "var(--success)", height: "100%", borderRadius: "4px" }} />
+                    </div>
+                  </div>
+                );
+              }) : (
+                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", textAlign: "center", display: "block", padding: "1rem 0" }}>Nenhuma meta cadastrada.</span>
+              )}
             </div>
           </div>
         </div>

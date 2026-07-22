@@ -13,11 +13,30 @@ export default async function PlanejamentoPage() {
     orderBy: { categoryName: "asc" }
   });
 
+  const now = new Date();
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const monthEntries = await prisma.ledgerEntry.findMany({
+    where: {
+      account: { userId: userId },
+      createdAt: { gte: firstDayOfMonth },
+      type: "DEBIT"
+    },
+    include: { transaction: true }
+  });
+
+  const spentByCategory: Record<string, number> = {};
+  monthEntries.forEach(entry => {
+    if (entry.transaction.description.includes("Ajuste")) return;
+    const cat = entry.transaction.categoryName || "OUTROS";
+    spentByCategory[cat] = (spentByCategory[cat] || 0) + entry.amount;
+  });
+
   const formattedBudgets = budgets.map(b => ({
     id: b.id,
     categoryName: b.categoryName,
     targetAmount: b.targetAmount,
-    spentAmount: b.spentAmount
+    spentAmount: spentByCategory[b.categoryName] || 0
   }));
 
   return (

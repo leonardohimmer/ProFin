@@ -23,9 +23,13 @@ export default function NewTransactionView({
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // Define o tipo inicial com base no query param (?type=CREDIT ou DEBIT)
-  const queryType = searchParams.get("type") as "CREDIT" | "DEBIT" | "TRANSFER" | null;
-  const [type, setType] = useState<"CREDIT" | "DEBIT" | "TRANSFER">(queryType || defaultType);
+  // Define o tipo inicial com base no query param
+  const queryType = searchParams.get("type") as "CREDIT" | "DEBIT" | "TRANSFER" | "CREDIT_CARD" | null;
+  const [type, setType] = useState<"CREDIT" | "DEBIT" | "TRANSFER" | "CREDIT_CARD">(queryType || defaultType);
+
+  // Keyboard state
+  const [showKeyboard, setShowKeyboard] = useState(true);
+  const [rawValue, setRawValue] = useState("0");
 
   const defaultDestAccount = accounts.find(a => a.name !== "Caixa" && a.name !== "SX") || accounts[1] || null;
   const [selectedDestinationAccount, setSelectedDestinationAccount] = useState<SelectionItem | null>(defaultDestAccount);
@@ -103,113 +107,114 @@ export default function NewTransactionView({
     }
   };
 
+  // derived amount logic
+  const displayAmount = (parseInt(rawValue) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  
+  // keep 'amount' in sync for the old submit logic
+  React.useEffect(() => {
+    setAmount(displayAmount);
+  }, [displayAmount]);
+
+  const handleKeyClick = (key: string) => {
+    if (key === "backspace") {
+      setRawValue(prev => prev.length > 1 ? prev.slice(0, -1) : "0");
+    } else if (/[0-9]/.test(key)) {
+      setRawValue(prev => prev === "0" ? key : prev + key);
+    }
+  };
+
+  const colorClass = type === "CREDIT" ? "color-credit" : type === "DEBIT" ? "color-debit" : type === "TRANSFER" ? "color-transfer" : "color-card";
+  const typeLabel = type === "CREDIT" ? "receita" : type === "DEBIT" ? "despesa" : type === "TRANSFER" ? "transferência" : "despesa no cartão";
+
   return (
     <>
-      {/* Top Header Row */}
-      <header className="page-header">
-        <div className="header-left">
-          <button onClick={() => router.back()} className="btn-back">
-            <svg fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ width: 20, height: 20 }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path>
-            </svg>
-          </button>
-          <div style={{ display: "flex", gap: "0.5rem", marginLeft: "1rem" }}>
-            <button 
-              type="button"
-              onClick={() => setType("DEBIT")} 
-              style={{
-                background: type === "DEBIT" ? "rgba(239, 68, 68, 0.15)" : "transparent",
-                color: type === "DEBIT" ? "var(--danger)" : "var(--text-secondary)",
-                border: "1px solid " + (type === "DEBIT" ? "var(--danger)" : "var(--border)"),
-                padding: "0.35rem 0.75rem",
-                borderRadius: "20px",
-                cursor: "pointer",
-                fontWeight: "600",
-                fontSize: "0.8rem"
-              }}
-            >
-              Despesa
-            </button>
-            <button 
-              type="button"
-              onClick={() => setType("CREDIT")} 
-              style={{
-                background: type === "CREDIT" ? "rgba(34, 197, 94, 0.15)" : "transparent",
-                color: type === "CREDIT" ? "var(--success)" : "var(--text-secondary)",
-                border: "1px solid " + (type === "CREDIT" ? "var(--success)" : "var(--border)"),
-                padding: "0.35rem 0.75rem",
-                borderRadius: "20px",
-                cursor: "pointer",
-                fontWeight: "600",
-                fontSize: "0.8rem"
-              }}
-            >
-              Receita
-            </button>
-            <button 
-              type="button"
-              onClick={() => setType("TRANSFER")} 
-              style={{
-                background: type === "TRANSFER" ? "rgba(59, 130, 246, 0.15)" : "transparent",
-                color: type === "TRANSFER" ? "#60a5fa" : "var(--text-secondary)",
-                border: "1px solid " + (type === "TRANSFER" ? "#60a5fa" : "var(--border)"),
-                padding: "0.35rem 0.75rem",
-                borderRadius: "20px",
-                cursor: "pointer",
-                fontWeight: "600",
-                fontSize: "0.8rem"
-              }}
-            >
-              Transferência
-            </button>
+      {showKeyboard ? (
+        <div className="custom-keyboard-overlay">
+          <div className="keyboard-top-area">
+            <div className="keyboard-header">
+              <button onClick={() => router.back()} className="keyboard-back-btn">
+                <svg fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path>
+                </svg>
+              </button>
+              <span className="keyboard-title">Nova {typeLabel}</span>
+            </div>
+            
+            <div className="keyboard-value-display">
+              <span className="keyboard-label">Valor da {typeLabel}</span>
+              <div className="keyboard-amount-row">
+                <span className="keyboard-currency">R$</span>
+                <span className="keyboard-amount">{displayAmount}</span>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="header-right">
-          <Link href="/transacoes" className="subtab-link active">Visão Geral</Link>
-          <Link href="/relatorios" className="subtab-link">Relatórios</Link>
+          <div className="custom-numpad-container">
+            <div className="numpad-header-row">
+              <span className="numpad-currency-symbol">R$</span>
+              <div className="numpad-input-display">
+                <span>{displayAmount}</span>
+                <button onClick={() => handleKeyClick("backspace")} className="numpad-backspace">
+                  <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 20, height: 20 }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75L14.25 12m0 0l2.25 2.25M14.25 12l2.25-2.25M14.25 12L12 14.25m-2.58 4.92l-6.375-6.375a1.125 1.125 0 010-1.59L9.42 4.83c.211-.211.498-.33.796-.33H19.5a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-9.284c-.298 0-.585-.119-.796-.33z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
 
-          <button className="header-icon-btn" style={{ marginLeft: "1rem" }}>
-            <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 20, height: 20 }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"></path>
-            </svg>
-          </button>
+            <div className="numpad-grid">
+              <button onClick={() => handleKeyClick("7")} className="numpad-btn">7</button>
+              <button onClick={() => handleKeyClick("8")} className="numpad-btn">8</button>
+              <button onClick={() => handleKeyClick("9")} className="numpad-btn">9</button>
+              <button className="numpad-btn operator">÷</button>
 
-          <button className="header-icon-btn">
-            <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 20, height: 20 }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
-            </svg>
-          </button>
+              <button onClick={() => handleKeyClick("4")} className="numpad-btn">4</button>
+              <button onClick={() => handleKeyClick("5")} className="numpad-btn">5</button>
+              <button onClick={() => handleKeyClick("6")} className="numpad-btn">6</button>
+              <button className="numpad-btn operator">×</button>
 
-          <div className="profile-container" style={{ borderLeft: "none" }}>
-            <div className="profile-avatar">
-              <svg fill="currentColor" viewBox="0 0 24 24" style={{ width: 24, height: 24, color: "var(--text-secondary)" }}>
-                <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
-              </svg>
+              <button onClick={() => handleKeyClick("1")} className="numpad-btn">1</button>
+              <button onClick={() => handleKeyClick("2")} className="numpad-btn">2</button>
+              <button onClick={() => handleKeyClick("3")} className="numpad-btn">3</button>
+              <button className="numpad-btn operator">-</button>
+
+              <button onClick={() => handleKeyClick("0")} className="numpad-btn">0</button>
+              <button className="numpad-btn">,</button>
+              <button className={`numpad-btn equals ${colorClass}`}>=</button>
+              <button className="numpad-btn operator">+</button>
+            </div>
+
+            <div className="numpad-action-row">
+              <button onClick={() => router.back()} className="numpad-cancel-btn">CANCELAR</button>
+              <button onClick={() => setShowKeyboard(false)} className={`numpad-done-btn ${colorClass}`}>CONCLUÍDO</button>
             </div>
           </div>
         </div>
-      </header>
+      ) : (
+      <div className="transaction-form-page">
+        {/* Top Header Row */}
+        <header className="page-header" style={{ padding: "1rem" }}>
+          <div className="header-left">
+            <button onClick={() => setShowKeyboard(true)} className="btn-back">
+              <svg fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ width: 20, height: 20 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path>
+              </svg>
+            </button>
+            <span style={{ marginLeft: "1rem", fontWeight: "600", fontSize: "1.1rem" }}>Nova {typeLabel}</span>
+          </div>
+        </header>
 
-      {/* Value Input Section */}
-      <section className="value-display-section">
-        <span className="value-display-label">
-          {type === "DEBIT" ? "VALOR DA DESPESA" : type === "CREDIT" ? "VALOR DA RECEITA" : "VALOR DA TRANSFERÊNCIA"}
-        </span>
-        <div className="value-display-amount-row">
-          <span className="value-display-currency">R$</span>
-          <input 
-            type="text" 
-            className="value-display-input"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-        </div>
-        <select className="value-display-currency-select">
-          <option value="BRL">BRL v</option>
-          <option value="USD">USD v</option>
-        </select>
-      </section>
+        {/* Value Input Section */}
+        <section className="value-display-section" onClick={() => setShowKeyboard(true)}>
+          <span className="value-display-label">
+            Valor da {typeLabel}
+          </span>
+          <div className="value-display-amount-row">
+            <span className="value-display-currency">R$</span>
+            <span className="value-display-input" style={{ border: "none", background: "none", fontSize: "2rem", color: "var(--text-primary)", padding: 0 }}>{displayAmount}</span>
+          </div>
+          <span style={{ alignSelf: "flex-end", color: "var(--text-secondary)", fontSize: "0.8rem", marginRight: "1rem", marginBottom: "0.5rem" }}>BRL ▾</span>
+        </section>
 
       {/* Two Columns Layout */}
       <form onSubmit={handleSubmit} style={{ width: "100%" }}>
@@ -482,6 +487,8 @@ export default function NewTransactionView({
           </button>
         </section>
       </form>
+      </div>
+      )}
 
       {/* Category Modal Dialog */}
       {showCategoryModal && (
