@@ -72,7 +72,7 @@ export default function QuickAddMenu({ buttonStyle, className }: QuickAddMenuPro
   ];
 
   return (
-    <div ref={menuRef} style={{ position: "relative", display: "inline-block" }} className={className}>
+    <div ref={menuRef} style={{ position: "relative", display: "inline-block", zIndex: 9999 }} className={className}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
