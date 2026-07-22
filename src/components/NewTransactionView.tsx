@@ -126,6 +126,27 @@ export default function NewTransactionView({
   const colorClass = type === "CREDIT" ? "color-credit" : type === "DEBIT" ? "color-debit" : type === "TRANSFER" ? "color-transfer" : "color-card";
   const typeLabel = type === "CREDIT" ? "receita" : type === "DEBIT" ? "despesa" : type === "TRANSFER" ? "transferência" : "despesa no cartão";
 
+  React.useEffect(() => {
+    if (!showKeyboard) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") {
+        return;
+      }
+      if (e.key >= "0" && e.key <= "9") {
+        handleKeyClick(e.key);
+      } else if (e.key === "Backspace") {
+        handleKeyClick("backspace");
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        setShowKeyboard(false);
+      } else if (e.key === "Escape") {
+        router.back();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showKeyboard, router]);
+
   return (
     <>
       {showKeyboard ? (
