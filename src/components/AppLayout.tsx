@@ -156,10 +156,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   ];
 
-  // Mostra o botão adaptativo na sidebar fora da home
-  const showSidebarButton = pathname !== "/";
-  const isTransacoesPage = pathname === "/transacoes";
-
   return (
     <div className="app-layout">
       {/* Sidebar */}
@@ -187,19 +183,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-
-        {showSidebarButton && (
-          <Link 
-            href="/transacoes/nova" 
-            className={`sidebar-button ${isTransacoesPage ? "green-button" : ""}`}
-            style={{ borderRadius: "20px" }}
-          >
-            <svg fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ width: 16, height: 16 }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
-            </svg>
-            <span>Adicionar Transação</span>
-          </Link>
-        )}
 
         <div style={{ marginTop: "auto" }}>
           <nav className="nav-menu">

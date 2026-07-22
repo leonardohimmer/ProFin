@@ -561,15 +561,6 @@ export default function CategoriesView({ categories }: CategoriesViewProps) {
         )}
       </section>
 
-      {/* Floating Action Button (Red/Primary FAB) */}
-      <div className="fab-container">
-        <button className="fab-btn" onClick={handleOpenCreate} style={{ backgroundColor: activeTab === "RECEITAS" ? "#10b981" : "#ef4444" }} title="Adicionar Categoria">
-          <svg className="fab-icon" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
-          </svg>
-        </button>
-      </div>
-
       {/* MODAL: Criar Nova Categoria */}
       {isCreateOpen && (
         <div style={{
