@@ -7,7 +7,6 @@ import { sendConfirmationEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
-    // Garante que as tabelas e o usuário padrão existam no banco antes de consultar
     await ensureDatabaseInitialized();
 
     const body = await request.json();
@@ -18,17 +17,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "E-mail e senha são obrigatórios" }, { status: 400 });
     }
 
-    // Busca o usuário
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
     if (!user) {
-      // Mensagem genérica para prevenir enumeração de usuários (Anti-Força Bruta)
       return NextResponse.json({ error: "Credenciais inválidas" }, { status: 401 });
     }
 
-    // Verifica a senha
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
@@ -37,9 +33,8 @@ export async function POST(request: Request) {
 
     // Bloqueia login caso o e-mail ainda não tenha sido confirmado
     if (user.emailVerified === false) {
-      const verificationCode =
-        user.verificationCode || Math.floor(100000 + Math.random() * 900000).toString();
-      const verificationToken = user.verificationToken || crypto.randomUUID();
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const verificationToken = crypto.randomUUID();
       const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
       await prisma.user.update({
@@ -66,32 +61,22 @@ export async function POST(request: Request) {
           requiresVerification: true,
           email: user.email,
           name: user.name,
-          emailDispatch: {
-            provider: emailResult.provider,
-            previewUrl: emailResult.previewUrl,
-            subject: emailResult.subject,
-            from: emailResult.from,
-            to: emailResult.to,
-            verificationUrl: emailResult.verificationUrl,
-            htmlContent: emailResult.htmlContent,
-            codeHint: emailResult.provider !== "smtp" && emailResult.provider !== "resend" ? verificationCode : undefined,
-          },
+          emailSent: emailResult.sent,
+          emailError: emailResult.error,
         },
         { status: 403 }
       );
     }
 
-    // Gera o token JWT
     const sessionToken = await encryptJWT({
       sub: user.id,
       email: user.email,
       role: user.role,
-      name: user.name
+      name: user.name,
     });
 
-    // Configura a resposta com o cookie seguro
     const response = NextResponse.json({ success: true, role: user.role, name: user.name });
-    
+
     response.cookies.set({
       name: "session",
       value: sessionToken,

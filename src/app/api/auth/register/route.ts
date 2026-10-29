@@ -104,17 +104,11 @@ export async function POST(request: Request) {
       requiresVerification: true,
       email: user.email,
       name: user.name,
-      message: "Conta criada! Enviamos um e-mail de confirmação para liberar seu login.",
-      emailDispatch: {
-        provider: emailResult.provider,
-        previewUrl: emailResult.previewUrl,
-        subject: emailResult.subject,
-        from: emailResult.from,
-        to: emailResult.to,
-        verificationUrl: emailResult.verificationUrl,
-        htmlContent: emailResult.htmlContent,
-        codeHint: emailResult.provider !== "smtp" && emailResult.provider !== "resend" ? verificationCode : undefined,
-      },
+      emailSent: emailResult.sent,
+      emailError: emailResult.error,
+      message: emailResult.sent
+        ? "Conta criada! Enviamos o código de confirmação para seu e-mail."
+        : "Conta criada, porém o envio de e-mail requer configuração do e-mail remetente.",
     });
   } catch (error: any) {
     console.error("Erro ao criar conta:", error);

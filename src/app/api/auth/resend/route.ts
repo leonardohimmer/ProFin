@@ -59,19 +59,16 @@ export async function POST(request: Request) {
       origin,
     });
 
+    if (!emailResult.sent) {
+      return NextResponse.json(
+        { error: emailResult.error || "Não foi possível enviar o e-mail de confirmação." },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
-      message: "Novo e-mail de confirmação enviado com sucesso!",
-      emailDispatch: {
-        provider: emailResult.provider,
-        previewUrl: emailResult.previewUrl,
-        subject: emailResult.subject,
-        from: emailResult.from,
-        to: emailResult.to,
-        verificationUrl: emailResult.verificationUrl,
-        htmlContent: emailResult.htmlContent,
-        codeHint: emailResult.provider !== "smtp" && emailResult.provider !== "resend" ? verificationCode : undefined,
-      },
+      message: "Novo código de confirmação enviado para seu e-mail!",
     });
   } catch (error: any) {
     console.error("Erro ao reenviar confirmação:", error);

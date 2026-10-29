@@ -118,7 +118,12 @@ export async function ensureDatabaseInitialized() {
       `CREATE INDEX IF NOT EXISTS "LedgerEntry_accountId_idx" ON "LedgerEntry"("accountId");`,
       `CREATE INDEX IF NOT EXISTS "LedgerEntry_transactionId_idx" ON "LedgerEntry"("transactionId");`,
       `CREATE UNIQUE INDEX IF NOT EXISTS "Transaction_idempotencyKey_key" ON "Transaction"("idempotencyKey");`,
-      `CREATE UNIQUE INDEX IF NOT EXISTS "Category_name_userId_parentId_key" ON "Category"("name", "userId", "parentId");`
+      `CREATE UNIQUE INDEX IF NOT EXISTS "Category_name_userId_parentId_key" ON "Category"("name", "userId", "parentId");`,
+      `CREATE TABLE IF NOT EXISTS "SystemConfig" (
+        "key" TEXT NOT NULL PRIMARY KEY,
+        "value" TEXT NOT NULL,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );`
     ];
 
     for (const sql of statements) {

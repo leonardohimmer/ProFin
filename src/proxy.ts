@@ -9,6 +9,7 @@ const publicRoutes = [
   '/api/auth/register',
   '/api/auth/verify',
   '/api/auth/resend',
+  '/api/settings/email',
   '/api/setup',
 ];
 

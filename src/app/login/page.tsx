@@ -5,17 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 type AuthMode = "login" | "register" | "verify" | "verified";
 
-interface EmailDispatchInfo {
-  provider: "smtp" | "resend" | "ethereal" | "virtual";
-  previewUrl?: string;
-  subject: string;
-  from: string;
-  to: string;
-  verificationUrl: string;
-  htmlContent: string;
-  codeHint?: string;
-}
-
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,10 +23,16 @@ function LoginContent() {
   const [otpDigits, setOtpDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [emailDispatch, setEmailDispatch] = useState<EmailDispatchInfo | null>(null);
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [verifiedBanner, setVerifiedBanner] = useState(false);
   const [verifiedRole, setVerifiedRole] = useState("OPERATOR");
+
+  // Sender Email Setup (only shown if system SMTP is not configured yet)
+  const [needsSmtpSetup, setNeedsSmtpSetup] = useState(false);
+  const [showSmtpModal, setShowSmtpModal] = useState(false);
+  const [smtpUser, setSmtpUser] = useState("");
+  const [smtpPass, setSmtpPass] = useState("");
+  const [isSavingSmtp, setIsSavingSmtp] = useState(false);
+  const [smtpFeedback, setSmtpFeedback] = useState("");
 
   // Feedback states
   const [error, setError] = useState("");
@@ -109,6 +104,7 @@ function LoginContent() {
   const switchMode = (newMode: AuthMode) => {
     setError("");
     setSuccessMsg("");
+    setNeedsSmtpSetup(false);
     setMode(newMode);
   };
 
@@ -129,16 +125,18 @@ function LoginContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        // Se a conta existe mas ainda não confirmou o e-mail, redireciona para a etapa de confirmação
         if (data.requiresVerification) {
-          if (data.emailDispatch) {
-            setEmailDispatch(data.emailDispatch);
-          }
           if (data.name) setName(data.name);
           setOtpDigits(["", "", "", "", "", ""]);
-          setResendCooldown(30);
           setMode("verify");
-          setSuccessMsg("Enviamos um código de confirmação para seu e-mail. Confirme abaixo para liberar seu login.");
+          if (data.emailSent === false) {
+            setNeedsSmtpSetup(true);
+            setError(data.emailError || "Não foi possível enviar o e-mail de confirmação. Configure o e-mail remetente.");
+          } else {
+            setNeedsSmtpSetup(false);
+            setResendCooldown(30);
+            setSuccessMsg("Enviamos um código de confirmação para seu e-mail. Digite-o abaixo para liberar seu login.");
+          }
           return;
         }
         throw new Error(data.error || "Erro ao conectar");
@@ -199,13 +197,18 @@ function LoginContent() {
         throw new Error(data.error || "Não foi possível criar sua conta.");
       }
 
-      if (data.emailDispatch) {
-        setEmailDispatch(data.emailDispatch);
-      }
       setOtpDigits(["", "", "", "", "", ""]);
-      setResendCooldown(30);
       setMode("verify");
-      setSuccessMsg("E-mail de confirmação enviado! Insira o código de 6 dígitos para liberar seu login.");
+
+      if (data.emailSent === false) {
+        setNeedsSmtpSetup(true);
+        setError(data.emailError || "Configure o e-mail remetente para disparar os códigos de confirmação.");
+      } else {
+        setNeedsSmtpSetup(false);
+        setResendCooldown(30);
+        setSuccessMsg("E-mail de confirmação enviado! Verifique sua caixa de entrada e digite o código de 6 dígitos.");
+      }
+
       setTimeout(() => {
         otpRefs.current[0]?.focus();
       }, 150);
@@ -226,7 +229,6 @@ function LoginContent() {
       return;
     }
 
-    // Caso o usuário digite ou cole múltiplos dígitos
     if (clean.length > 1) {
       const chars = clean.slice(0, 6).split("");
       const next = [...otpDigits];
@@ -270,12 +272,12 @@ function LoginContent() {
   };
 
   // Verify 6-digit code
-  const handleVerifyCodeSubmit = async (e?: React.FormEvent, overrideCode?: string) => {
+  const handleVerifyCodeSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setError("");
     setSuccessMsg("");
 
-    const fullCode = overrideCode || otpDigits.join("");
+    const fullCode = otpDigits.join("");
     if (fullCode.length !== 6) {
       setError("Digite os 6 dígitos do código de confirmação enviado para seu e-mail.");
       return;
@@ -298,7 +300,6 @@ function LoginContent() {
       }
 
       if (data.role) setVerifiedRole(data.role);
-      setIsEmailModalOpen(false);
       setVerifiedBanner(true);
       setMode("verified");
     } catch (err: any) {
@@ -324,6 +325,9 @@ function LoginContent() {
 
       const data = await res.json();
       if (!res.ok) {
+        if (data.error?.includes("remetente")) {
+          setNeedsSmtpSetup(true);
+        }
         throw new Error(data.error || "Erro ao reenviar e-mail.");
       }
 
@@ -333,9 +337,7 @@ function LoginContent() {
         return;
       }
 
-      if (data.emailDispatch) {
-        setEmailDispatch(data.emailDispatch);
-      }
+      setNeedsSmtpSetup(false);
       setOtpDigits(["", "", "", "", "", ""]);
       setResendCooldown(30);
       setSuccessMsg("Novo código de confirmação enviado para seu e-mail!");
@@ -346,13 +348,49 @@ function LoginContent() {
     }
   };
 
-  // Fill OTP from virtual email viewer and confirm
-  const handleConfirmFromEmailViewer = (codeToUse?: string) => {
-    const code = codeToUse || emailDispatch?.codeHint;
-    if (code && code.length === 6) {
-      setOtpDigits(code.split(""));
-      setIsEmailModalOpen(false);
-      handleVerifyCodeSubmit(undefined, code);
+  // Save SMTP sender email and immediately resend verification code
+  const handleSaveSmtpAndResend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSmtpFeedback("");
+    setIsSavingSmtp(true);
+
+    try {
+      const res = await fetch("/api/settings/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          smtpUser: smtpUser.trim(),
+          smtpPass: smtpPass.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Erro ao configurar e-mail remetente.");
+      }
+
+      setShowSmtpModal(false);
+      setNeedsSmtpSetup(false);
+      setError("");
+
+      // Dispara o e-mail de confirmação imediatamente após configurar
+      const resendRes = await fetch("/api/auth/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      const resendData = await resendRes.json();
+
+      if (resendRes.ok) {
+        setResendCooldown(30);
+        setSuccessMsg(`E-mail remetente configurado e código enviado para ${email}! Verifique sua caixa de entrada.`);
+      } else {
+        setError(resendData.error || "Configuração salva, clique em reenviar código.");
+      }
+    } catch (err: any) {
+      setSmtpFeedback(err.message);
+    } finally {
+      setIsSavingSmtp(false);
     }
   };
 
@@ -474,7 +512,7 @@ function LoginContent() {
           </div>
         )}
 
-        {/* Step Progress Indicator for Account Creation & Verification */}
+        {/* Step Progress Indicator */}
         {(mode === "register" || mode === "verify" || mode === "verified") && (
           <div
             style={{
@@ -578,14 +616,38 @@ function LoginContent() {
               marginBottom: "1.25rem",
               fontSize: "0.85rem",
               display: "flex",
-              alignItems: "center",
+              flexDirection: "column",
               gap: "0.6rem",
             }}
           >
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
-            <span>{error}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+              <span>{error}</span>
+            </div>
+            {needsSmtpSetup && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSmtpFeedback("");
+                  setShowSmtpModal(true);
+                }}
+                style={{
+                  alignSelf: "flex-start",
+                  padding: "0.45rem 0.85rem",
+                  borderRadius: "8px",
+                  border: "1px solid var(--primary)",
+                  backgroundColor: "rgba(139, 92, 246, 0.2)",
+                  color: "#ffffff",
+                  fontSize: "0.78rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                ⚙️ Cadastrar E-mail Remetente do Sistema (SMTP)
+              </button>
+            )}
           </div>
         )}
 
@@ -767,7 +829,6 @@ function LoginContent() {
         {/* ==================== MODE 2: REGISTER (INTERACTIVE) ==================== */}
         {mode === "register" && (
           <form onSubmit={handleRegisterSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {/* Nome Completo */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
                 <label style={{ fontSize: "0.84rem", fontWeight: 500, color: "var(--text-secondary)" }}>
@@ -799,11 +860,10 @@ function LoginContent() {
               />
             </div>
 
-            {/* E-mail */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
                 <label style={{ fontSize: "0.84rem", fontWeight: 500, color: "var(--text-secondary)" }}>
-                  E-mail (para confirmação)
+                  E-mail (para receber o código)
                 </label>
                 {email.length > 0 && (
                   <span style={{ fontSize: "0.75rem", color: isEmailValid ? "var(--success)" : "var(--warning)" }}>
@@ -831,7 +891,6 @@ function LoginContent() {
               />
             </div>
 
-            {/* Senha + Medidor Interativo */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
                 <label style={{ fontSize: "0.84rem", fontWeight: 500, color: "var(--text-secondary)" }}>
@@ -887,7 +946,6 @@ function LoginContent() {
                 </button>
               </div>
 
-              {/* Barra interativa de força da senha */}
               {password.length > 0 && (
                 <div style={{ marginTop: "0.55rem" }}>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "5px", marginBottom: "0.5rem" }}>
@@ -919,7 +977,6 @@ function LoginContent() {
               )}
             </div>
 
-            {/* Confirmar Senha */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
                 <label style={{ fontSize: "0.84rem", fontWeight: 500, color: "var(--text-secondary)" }}>
@@ -1027,7 +1084,7 @@ function LoginContent() {
           </form>
         )}
 
-        {/* ==================== MODE 3: VERIFY EMAIL (INTERACTIVE OTP + EMAIL VIEWER) ==================== */}
+        {/* ==================== MODE 3: VERIFY EMAIL (ONLY 6-DIGIT INPUT, NO CODE EXPOSURE) ==================== */}
         {mode === "verify" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "1.15rem" }}>
             <div
@@ -1035,67 +1092,26 @@ function LoginContent() {
                 backgroundColor: "var(--tabs-bg)",
                 border: "1px solid var(--border)",
                 borderRadius: "14px",
-                padding: "1.1rem",
+                padding: "1.15rem",
                 textAlign: "center",
               }}
             >
               <div style={{ fontSize: "1.75rem", marginBottom: "0.35rem" }}>✉️</div>
-              <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.25rem" }}>
+              <div style={{ fontSize: "0.92rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.3rem" }}>
                 Verifique sua caixa de entrada
               </div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                Enviamos um e-mail de confirmação para{" "}
+              <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
+                Enviamos um e-mail com o código de confirmação de 6 dígitos para{" "}
                 <strong style={{ color: "var(--text-primary)" }}>{email}</strong>.
-                <br />O login será liberado assim que você confirmar o código abaixo.
+                <br />
+                <span style={{ fontSize: "0.75rem", color: "var(--text-tertiary)" }}>
+                  Caso não encontre na caixa principal, verifique também a pasta de Spam ou Lixo Eletrônico.
+                </span>
               </div>
-
-              {/* Botão interativo para abrir o e-mail enviado */}
-              {emailDispatch && (
-                <div style={{ marginTop: "0.85rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <button
-                    type="button"
-                    onClick={() => setIsEmailModalOpen(true)}
-                    style={{
-                      width: "100%",
-                      padding: "0.65rem 0.9rem",
-                      borderRadius: "10px",
-                      border: "1px solid rgba(139, 92, 246, 0.45)",
-                      backgroundColor: "rgba(139, 92, 246, 0.14)",
-                      color: "#c4b5fd",
-                      fontSize: "0.82rem",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "0.5rem",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    <span>📬</span>
-                    <span>Abrir E-mail de Confirmação Recebido</span>
-                  </button>
-
-                  {emailDispatch.previewUrl && (
-                    <a
-                      href={emailDispatch.previewUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        fontSize: "0.75rem",
-                        color: "var(--primary)",
-                        textDecoration: "underline",
-                      }}
-                    >
-                      Abrir também no servidor de e-mail externo (Ethereal) ↗
-                    </a>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* 6-Digit OTP Input Form */}
-            <form onSubmit={(e) => handleVerifyCodeSubmit(e)} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <form onSubmit={handleVerifyCodeSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
                 <label
                   style={{
@@ -1290,10 +1306,10 @@ function LoginContent() {
         )}
       </div>
 
-      {/* ==================== MODAL INTERATIVO DO E-MAIL DE CONFIRMAÇÃO ==================== */}
-      {isEmailModalOpen && emailDispatch && (
+      {/* ==================== MODAL PARA CADASTRAR O E-MAIL REMETENTE DO SISTEMA ==================== */}
+      {showSmtpModal && (
         <div
-          onClick={() => setIsEmailModalOpen(false)}
+          onClick={() => setShowSmtpModal(false)}
           style={{
             position: "fixed",
             inset: 0,
@@ -1310,124 +1326,135 @@ function LoginContent() {
             onClick={(e) => e.stopPropagation()}
             style={{
               width: "100%",
-              maxWidth: "560px",
-              maxHeight: "90vh",
-              backgroundColor: "#18181f",
-              border: "1px solid #2e2e3d",
+              maxWidth: "480px",
+              backgroundColor: "var(--card-bg)",
+              border: "1px solid var(--border)",
               borderRadius: "18px",
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
+              padding: "1.75rem",
               boxShadow: "0 25px 60px rgba(0,0,0,0.8)",
             }}
           >
-            {/* Email Client Top Bar */}
-            <div
-              style={{
-                padding: "0.9rem 1.25rem",
-                backgroundColor: "#121217",
-                borderBottom: "1px solid #262633",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span style={{ fontSize: "1.1rem" }}>📨</span>
-                <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "#f3f3f6" }}>
-                  E-mail de Confirmação Enviado
-                </span>
-              </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                Cadastrar E-mail de Envio (SMTP)
+              </h3>
               <button
                 type="button"
-                onClick={() => setIsEmailModalOpen(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#9ea2b0",
-                  cursor: "pointer",
-                  fontSize: "1.1rem",
-                }}
+                onClick={() => setShowSmtpModal(false)}
+                style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontSize: "1.1rem" }}
               >
                 ✕
               </button>
             </div>
 
-            {/* Email Metadata Header */}
             <div
               style={{
-                padding: "0.85rem 1.25rem",
-                backgroundColor: "#15151c",
-                borderBottom: "1px solid #262633",
+                backgroundColor: "var(--tabs-bg)",
+                border: "1px solid var(--border)",
+                borderRadius: "10px",
+                padding: "0.85rem",
+                marginBottom: "1rem",
                 fontSize: "0.78rem",
-                color: "#9ea2b0",
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.25rem",
+                color: "var(--text-secondary)",
+                lineHeight: 1.55,
               }}
             >
-              <div>
-                <strong style={{ color: "#f3f3f6" }}>De:</strong> {emailDispatch.from}
-              </div>
-              <div>
-                <strong style={{ color: "#f3f3f6" }}>Para:</strong> {emailDispatch.to}
-              </div>
-              <div>
-                <strong style={{ color: "#f3f3f6" }}>Assunto:</strong> {emailDispatch.subject}
-              </div>
+              Para que o ProFin envie os códigos de confirmação pelo seu Gmail:
+              <br />
+              1. Acesse{" "}
+              <a
+                href="https://myaccount.google.com/apppasswords"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "var(--primary)", textDecoration: "underline", fontWeight: 600 }}
+              >
+                myaccount.google.com/apppasswords
+              </a>
+              <br />
+              2. Gere uma <strong>Senha de App</strong> de 16 letras e informe abaixo junto com seu e-mail.
             </div>
 
-            {/* Email Body Preview + Quick Confirm Action */}
-            <div style={{ padding: "1.25rem", overflowY: "auto", flex: 1 }}>
-              {emailDispatch.codeHint && (
-                <div
-                  style={{
-                    backgroundColor: "rgba(16, 185, 129, 0.12)",
-                    border: "1px solid rgba(16, 185, 129, 0.35)",
-                    borderRadius: "12px",
-                    padding: "0.9rem 1rem",
-                    marginBottom: "1rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "0.75rem",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: "0.75rem", color: "#9ea2b0" }}>Ação rápida do e-mail:</div>
-                    <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#34d399" }}>
-                      Código: {emailDispatch.codeHint}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleConfirmFromEmailViewer(emailDispatch.codeHint)}
-                    style={{
-                      padding: "0.55rem 1rem",
-                      borderRadius: "8px",
-                      border: "none",
-                      backgroundColor: "#10b981",
-                      color: "#ffffff",
-                      fontWeight: 600,
-                      fontSize: "0.82rem",
-                      cursor: "pointer",
-                    }}
-                  >
-                    ✓ Confirmar Agora e Liberar Login
-                  </button>
-                </div>
-              )}
-
+            {smtpFeedback && (
               <div
                 style={{
-                  borderRadius: "12px",
-                  overflow: "hidden",
-                  border: "1px solid #262633",
+                  background: "rgba(248, 113, 113, 0.12)",
+                  border: "1px solid var(--danger)",
+                  color: "var(--danger)",
+                  padding: "0.75rem",
+                  borderRadius: "8px",
+                  marginBottom: "1rem",
+                  fontSize: "0.8rem",
                 }}
-                dangerouslySetInnerHTML={{ __html: emailDispatch.htmlContent }}
-              />
-            </div>
+              >
+                {smtpFeedback}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveSmtpAndResend} style={{ display: "flex", flexDirection: "column", gap: "0.95rem" }}>
+              <div>
+                <label style={{ display: "block", marginBottom: "0.35rem", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
+                  E-mail Remetente (ex: seuemail@gmail.com)
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="seuemail@gmail.com"
+                  value={smtpUser}
+                  onChange={(e) => setSmtpUser(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem 0.9rem",
+                    borderRadius: "10px",
+                    border: "1px solid var(--border)",
+                    background: "var(--tabs-bg)",
+                    color: "var(--text-primary)",
+                    fontSize: "0.9rem",
+                    outline: "none",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: "0.35rem", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
+                  Senha de App do Google (16 letras) ou Senha SMTP
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="xxxx xxxx xxxx xxxx"
+                  value={smtpPass}
+                  onChange={(e) => setSmtpPass(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem 0.9rem",
+                    borderRadius: "10px",
+                    border: "1px solid var(--border)",
+                    background: "var(--tabs-bg)",
+                    color: "var(--text-primary)",
+                    fontSize: "0.9rem",
+                    outline: "none",
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSavingSmtp}
+                style={{
+                  marginTop: "0.3rem",
+                  padding: "0.8rem",
+                  borderRadius: "10px",
+                  border: "none",
+                  background: "linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%)",
+                  color: "#ffffff",
+                  fontWeight: 600,
+                  fontSize: "0.9rem",
+                  cursor: isSavingSmtp ? "not-allowed" : "pointer",
+                }}
+              >
+                {isSavingSmtp ? "Testando SMTP e enviando código..." : "Salvar E-mail e Enviar Código Agora"}
+              </button>
+            </form>
           </div>
         </div>
       )}
