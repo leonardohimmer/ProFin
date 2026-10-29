@@ -318,7 +318,7 @@ export default function AccountsView({ accounts: initialAccounts }: AccountsView
       </header>
 
       {/* Summary Cards */}
-      <section className="summary-grid" style={{ marginBottom: "2rem" }}>
+      <section className="summary-grid" style={{ marginBottom: "1rem" }}>
         <div className="summary-card">
           <div className="summary-card-title">Saldo Geral Consolidado</div>
           <div className={`summary-card-value ${totalBalance < 0 ? "negative" : "positive"}`}>

@@ -3,7 +3,14 @@ import type { NextRequest } from 'next/server';
 import { decryptJWT } from '@/lib/auth';
 
 // Define rotas que não precisam de autenticação
-const publicRoutes = ['/login', '/api/auth/login', '/api/setup'];
+const publicRoutes = [
+  '/login',
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/verify',
+  '/api/auth/resend',
+  '/api/setup',
+];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

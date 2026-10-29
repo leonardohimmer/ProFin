@@ -12,13 +12,17 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  role      String   @default("OPERATOR") // ADMIN, MANAGER, OPERATOR
-  password  String   // Hashed
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String    @id @default(cuid())
+  name                String
+  email               String    @unique
+  role                String    @default("OPERATOR") // ADMIN, MANAGER, OPERATOR
+  password            String    // Hashed
+  emailVerified       Boolean   @default(false)
+  verificationCode    String?
+  verificationToken   String?
+  verificationExpires DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   accounts  Account[]
   categories Category[]

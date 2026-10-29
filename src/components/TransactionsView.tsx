@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import QuickAddMenu from "./QuickAddMenu";
 
 interface TransactionEntry {
@@ -9,6 +10,7 @@ interface TransactionEntry {
   createdAt: string;
   type: "CREDIT" | "DEBIT";
   amount: number;
+  accountName?: string;
   transaction: {
     id: string;
     description: string;
@@ -25,16 +27,48 @@ interface TransactionsViewProps {
   totalBankBalance: number;
   monthlyIncome: number;
   monthlyExpenses: number;
+  selectedMonth?: number;
+  selectedYear?: number;
 }
 
 export default function TransactionsView({
   entries,
   totalBankBalance,
   monthlyIncome,
-  monthlyExpenses
+  monthlyExpenses,
+  selectedMonth,
+  selectedYear
 }: TransactionsViewProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"ALL" | "CREDIT" | "DEBIT">("ALL");
+
+  const currentMonth = selectedMonth !== undefined ? selectedMonth : new Date().getMonth();
+  const currentYear = selectedYear !== undefined ? selectedYear : new Date().getFullYear();
+
+  const MONTHS = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+  const YEARS = Array.from({ length: 7 }, (_, i) => 2023 + i);
+
+  const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newMonth = e.target.value;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("month", newMonth);
+    params.set("year", currentYear.toString());
+    router.push(`/transacoes?${params.toString()}`);
+  };
+
+  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newYear = e.target.value;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("month", currentMonth.toString());
+    params.set("year", newYear);
+    router.push(`/transacoes?${params.toString()}`);
+  };
 
   // Filtra as transações excluindo os ajustes de saldo
   const userTransactions = entries.filter(e => {
@@ -102,10 +136,30 @@ export default function TransactionsView({
 
       {/* Sub-header controls */}
       <section className="controls-row">
-        <div className="date-navigator">
-          <button className="nav-arrow">&lt;</button>
-          <span className="nav-date-text">Junho</span>
-          <button className="nav-arrow">&gt;</button>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div className="select-wrapper">
+            <select 
+              className="select-dropdown" 
+              value={currentMonth}
+              onChange={handleMonthChange}
+            >
+              {MONTHS.map((m, idx) => (
+                <option key={idx} value={idx}>{m}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="select-wrapper">
+            <select 
+              className="select-dropdown" 
+              value={currentYear}
+              onChange={handleYearChange}
+            >
+              {YEARS.map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="search-input-wrapper">
@@ -135,7 +189,7 @@ export default function TransactionsView({
       </section>
 
       {/* Summary Metrics Cards */}
-      <section className="summary-grid" style={{ marginBottom: "2.5rem" }}>
+      <section className="summary-grid" style={{ marginBottom: "1rem" }}>
         <div className="summary-card">
           <div className="summary-card-title" style={{ textTransform: "uppercase", fontSize: "0.75rem", letterSpacing: "0.5px" }}>Saldo Atual</div>
           <div className={`summary-card-value ${totalBankBalance < 0 ? "negative" : "positive"}`}>
@@ -196,46 +250,139 @@ export default function TransactionsView({
           </Link>
         </div>
       ) : (
-        <div className="panel-card" style={{ padding: 0 }}>
+        <div className="panel-card" style={{ padding: 0, overflowX: "auto" }}>
           <table className="data-table">
             <thead>
               <tr>
-                <th style={{ width: "120px" }}>Data</th>
+                <th style={{ width: "95px" }}>Data</th>
+                <th style={{ width: "105px" }}>Tipo</th>
                 <th>Descrição</th>
-                <th>Recebido de / Pago a</th>
+                <th>Conta</th>
                 <th>Categoria</th>
-                <th>Valor</th>
-                <th>Tipo</th>
-                <th>Pago?</th>
-                <th style={{ width: "60px" }}></th>
+                <th>Forma / Tag</th>
+                <th>Parcela</th>
+                <th>Recebido de / Pago a</th>
+                <th style={{ textAlign: "right" }}>Valor</th>
+                <th style={{ width: "70px", textAlign: "center" }}>Pago?</th>
+                <th style={{ width: "50px" }}></th>
               </tr>
             </thead>
             <tbody>
-              {filteredTransactions.map((entry) => (
-                <tr key={entry.id}>
-                  <td>{new Date(entry.createdAt).toLocaleDateString("pt-BR")}</td>
-                  <td style={{ fontWeight: "600" }}>{entry.transaction.description}</td>
-                  <td>{entry.transaction.contact || "-"}</td>
-                  <td>
-                    <span style={{ padding: "0.25rem 0.65rem", backgroundColor: "var(--primary-light)", color: "#c084fc", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "600" }}>
-                      {entry.transaction.categoryName}
-                    </span>
-                  </td>
-                  <td style={{ fontWeight: "700", color: entry.type === "CREDIT" ? "var(--success)" : "var(--text-primary)" }}>
-                    {entry.type === "CREDIT" ? "+" : "-"} {formatValue(entry.amount)}
-                  </td>
-                  <td>{entry.transaction.paymentType}</td>
-                  <td>
-                    <label className="switch-control">
-                      <input type="checkbox" checked={entry.transaction.isPaid} readOnly />
-                      <span className="switch-slider green-switch"></span>
-                    </label>
-                  </td>
-                  <td>
-                    <button className="category-action-icon">•••</button>
-                  </td>
-                </tr>
-              ))}
+              {filteredTransactions.map((entry) => {
+                const isIncome = entry.type === "CREDIT";
+                return (
+                  <tr 
+                    key={entry.id}
+                    style={{
+                      backgroundColor: isIncome ? "rgba(16, 185, 129, 0.02)" : "rgba(239, 68, 68, 0.02)"
+                    }}
+                  >
+                    <td style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                      {new Date(entry.createdAt).toLocaleDateString("pt-BR")}
+                    </td>
+
+                    <td>
+                      {isIncome ? (
+                        <span style={{
+                          padding: "0.25rem 0.65rem",
+                          borderRadius: "20px",
+                          fontSize: "0.75rem",
+                          fontWeight: "700",
+                          backgroundColor: "rgba(16, 185, 129, 0.15)",
+                          color: "#34d399",
+                          border: "1px solid rgba(16, 185, 129, 0.3)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.35rem"
+                        }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#34d399" }}></span>
+                          Receita
+                        </span>
+                      ) : (
+                        <span style={{
+                          padding: "0.25rem 0.65rem",
+                          borderRadius: "20px",
+                          fontSize: "0.75rem",
+                          fontWeight: "700",
+                          backgroundColor: "rgba(239, 68, 68, 0.15)",
+                          color: "#f87171",
+                          border: "1px solid rgba(239, 68, 68, 0.3)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.35rem"
+                        }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#f87171" }}></span>
+                          Despesa
+                        </span>
+                      )}
+                    </td>
+
+                    <td style={{ fontWeight: "600", color: "var(--text-primary)" }}>
+                      {entry.transaction.description}
+                    </td>
+
+                    <td>
+                      <span style={{ fontSize: "0.82rem", color: "var(--text-primary)", fontWeight: "500", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                        <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 14, height: 14, color: "var(--text-tertiary)" }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                        </svg>
+                        {entry.accountName || "Nubank Principal"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span style={{
+                        padding: "0.25rem 0.65rem",
+                        backgroundColor: isIncome ? "rgba(168, 85, 247, 0.15)" : "rgba(99, 102, 241, 0.15)",
+                        color: isIncome ? "#c084fc" : "#818cf8",
+                        borderRadius: "6px",
+                        fontSize: "0.75rem",
+                        fontWeight: "600",
+                        border: `1px solid ${isIncome ? "rgba(168, 85, 247, 0.25)" : "rgba(99, 102, 241, 0.25)"}`
+                      }}>
+                        {entry.transaction.categoryName}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span style={{
+                        padding: "0.2rem 0.55rem",
+                        borderRadius: "6px",
+                        fontSize: "0.72rem",
+                        fontWeight: "600",
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                        color: "var(--text-secondary)",
+                        border: "1px solid var(--border)"
+                      }}>
+                        {entry.transaction.paymentMethod || "PIX"}
+                      </span>
+                    </td>
+
+                    <td style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>
+                      {entry.transaction.paymentType === "PARCELADO" ? "1/12" : "À Vista"}
+                    </td>
+
+                    <td style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                      {entry.transaction.contact || "-"}
+                    </td>
+
+                    <td style={{ textAlign: "right", fontWeight: "700", fontSize: "0.95rem", color: isIncome ? "#10b981" : "#ef4444" }}>
+                      {isIncome ? "+ " : "- "} {formatValue(entry.amount)}
+                    </td>
+
+                    <td style={{ textAlign: "center" }}>
+                      <label className="switch-control">
+                        <input type="checkbox" checked={entry.transaction.isPaid} readOnly />
+                        <span className="switch-slider green-switch"></span>
+                      </label>
+                    </td>
+
+                    <td>
+                      <button className="category-action-icon">•••</button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

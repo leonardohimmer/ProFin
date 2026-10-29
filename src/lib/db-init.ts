@@ -18,6 +18,10 @@ export async function ensureDatabaseInitialized() {
         "email" TEXT NOT NULL,
         "role" TEXT NOT NULL DEFAULT 'OPERATOR',
         "password" TEXT NOT NULL,
+        "emailVerified" BOOLEAN NOT NULL DEFAULT false,
+        "verificationCode" TEXT,
+        "verificationToken" TEXT,
+        "verificationExpires" TIMESTAMP(3),
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL
       );`,
@@ -127,6 +131,21 @@ export async function ensureDatabaseInitialized() {
       // Coluna já existente em bancos que foram migrados previamente
     }
 
+    const userAlterStatements = [
+      `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerified" BOOLEAN NOT NULL DEFAULT true;`,
+      `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "verificationCode" TEXT;`,
+      `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "verificationToken" TEXT;`,
+      `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "verificationExpires" TIMESTAMP(3);`
+    ];
+
+    for (const sql of userAlterStatements) {
+      try {
+        await prisma.$executeRawUnsafe(sql);
+      } catch (e) {
+        // Ignora se já existir
+      }
+    }
+
     const defaultUserId = "test-user-id";
     const defaultUserEmail = "joao@gestao.com";
     const userCount = await prisma.user.count();
@@ -140,6 +159,7 @@ export async function ensureDatabaseInitialized() {
           email: defaultUserEmail,
           password: hashedPassword,
           role: "OPERATOR",
+          emailVerified: true,
           accounts: {
             create: [
               { id: "acc-nubank", name: "Nubank Principal" },
@@ -209,5 +229,67 @@ export async function ensureDatabaseInitialized() {
     globalThis.isDbInitialized = true;
   } catch (error) {
     console.error("Erro na auto-inicialização do banco de dados:", error);
+  }
+}
+
+export async function seedNewUserDefaults(userId: string) {
+  try {
+    const defaultCategories = [
+      // DESPESAS
+      { name: "Carro", type: "DEBIT" },
+      { name: "Celular", type: "DEBIT" },
+      { name: "Combustível", type: "DEBIT" },
+      { name: "Educação", type: "DEBIT" },
+      { name: "Eletrônicos", type: "DEBIT" },
+      { name: "Energia", type: "DEBIT" },
+      { name: "Farmácia", type: "DEBIT" },
+      { name: "IPTU", type: "DEBIT" },
+      { name: "Lazer", type: "DEBIT" },
+      { name: "Mercado", type: "DEBIT" },
+      { name: "Moradia", type: "DEBIT" },
+      { name: "Pagamentos", type: "DEBIT" },
+      { name: "Pet", type: "DEBIT" },
+      { name: "PIX", type: "DEBIT" },
+      { name: "Presentes", type: "DEBIT" },
+      { name: "Roupa", type: "DEBIT" },
+      { name: "Saúde", type: "DEBIT" },
+      { name: "Vestuário", type: "DEBIT" },
+      { name: "Água", type: "DEBIT" },
+      // RECEITAS
+      { name: "Salário", type: "CREDIT" },
+      { name: "Investimentos", type: "CREDIT" },
+      { name: "Freelance", type: "CREDIT" },
+      { name: "Prêmios", type: "CREDIT" },
+      { name: "Cashback", type: "CREDIT" },
+      { name: "Rendimentos", type: "CREDIT" },
+      { name: "Outras Receitas", type: "CREDIT" }
+    ];
+
+    const existingAccounts = await prisma.account.count({ where: { userId } });
+    if (existingAccounts === 0) {
+      await prisma.account.createMany({
+        data: [
+          { userId, name: "Conta Principal" },
+          { userId, name: "Carteira / Dinheiro" }
+        ]
+      });
+    }
+
+    for (const cat of defaultCategories) {
+      const existing = await prisma.category.findFirst({
+        where: { name: cat.name, userId }
+      });
+      if (!existing) {
+        await prisma.category.create({
+          data: {
+            name: cat.name,
+            type: cat.type,
+            userId
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Erro ao criar dados iniciais para novo usuário:", error);
   }
 }

@@ -1,15 +1,35 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import TransactionsView from "@/components/TransactionsView";
 
-export default async function TransacoesPage() {
+export const dynamic = "force-dynamic";
+
+interface PageProps {
+  searchParams: Promise<{ month?: string; year?: string }>;
+}
+
+export default async function TransacoesPage({ searchParams }: PageProps) {
+  const resolvedSearchParams = await searchParams;
+  const now = new Date();
+  const selectedMonth = resolvedSearchParams?.month !== undefined ? parseInt(resolvedSearchParams.month, 10) : now.getMonth();
+  const selectedYear = resolvedSearchParams?.year !== undefined ? parseInt(resolvedSearchParams.year, 10) : now.getFullYear();
+
+  const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1, 0, 0, 0, 0);
+  const lastDayOfMonth = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59, 999);
+
   const headerList = await headers();
   const userId = headerList.get("x-user-id") || "test-user-id";
 
-  // Busca todas as ledger entries do usuário
+  // Busca todas as ledger entries do usuário no período selecionado
   const entries = await prisma.ledgerEntry.findMany({
-    where: { account: { userId: userId } },
+    where: { 
+      account: { userId: userId },
+      createdAt: {
+        gte: firstDayOfMonth,
+        lte: lastDayOfMonth
+      }
+    },
     include: {
       transaction: true,
       account: true
@@ -17,7 +37,7 @@ export default async function TransacoesPage() {
     orderBy: { createdAt: "desc" }
   });
 
-  // Calcula o saldo total das contas do banco
+  // Calcula o saldo total das contas do banco (saldo acumulado geral)
   const accounts = await prisma.account.findMany({
     where: { userId: userId },
     include: { entries: true }
@@ -34,22 +54,11 @@ export default async function TransacoesPage() {
     });
   });
 
-  // Calcula receitas e despesas do mês atual
-  const now = new Date();
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  const monthEntries = await prisma.ledgerEntry.findMany({
-    where: {
-      account: { userId: userId },
-      createdAt: { gte: firstDayOfMonth }
-    },
-    include: { transaction: true }
-  });
-
+  // Calcula receitas e despesas do mês selecionado
   let monthlyIncome = 0;
   let monthlyExpenses = 0;
 
-  monthEntries.forEach(entry => {
+  entries.forEach(entry => {
     // Ignora lançamentos de ajuste de saldo inicial
     if (entry.transaction.description.includes("Ajuste")) {
       return;
@@ -68,6 +77,7 @@ export default async function TransacoesPage() {
     createdAt: entry.createdAt.toISOString(),
     type: entry.type as "CREDIT" | "DEBIT",
     amount: entry.amount,
+    accountName: entry.account?.name || "Conta Principal",
     transaction: {
       id: entry.transaction.id,
       description: entry.transaction.description,
@@ -80,11 +90,15 @@ export default async function TransacoesPage() {
   }));
 
   return (
-    <TransactionsView
-      entries={formattedEntries}
-      totalBankBalance={totalBankBalance}
-      monthlyIncome={monthlyIncome}
-      monthlyExpenses={monthlyExpenses}
-    />
+    <Suspense fallback={null}>
+      <TransactionsView
+        entries={formattedEntries}
+        totalBankBalance={totalBankBalance}
+        monthlyIncome={monthlyIncome}
+        monthlyExpenses={monthlyExpenses}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+      />
+    </Suspense>
   );
 }

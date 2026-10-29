@@ -1,13 +1,24 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import DashboardView from "@/components/DashboardView";
 import { ensureDatabaseInitialized } from "@/lib/db-init";
 
-export default async function HomePage() {
+export const dynamic = "force-dynamic";
+
+interface PageProps {
+  searchParams: Promise<{ month?: string; year?: string }>;
+}
+
+export default async function HomePage({ searchParams }: PageProps) {
   await ensureDatabaseInitialized();
 
   try {
+    const resolvedSearchParams = await searchParams;
+    const now = new Date();
+    const selectedMonth = resolvedSearchParams?.month !== undefined ? parseInt(resolvedSearchParams.month, 10) : now.getMonth();
+    const selectedYear = resolvedSearchParams?.year !== undefined ? parseInt(resolvedSearchParams.year, 10) : now.getFullYear();
+
     const headerList = await headers();
     const userId = headerList.get("x-user-id") || "test-user-id";
 
@@ -46,14 +57,17 @@ export default async function HomePage() {
       };
     });
 
-    // Busca lançamentos do mês atual para preencher os resumos de Receita/Despesa do mês
-    const now = new Date();
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    // Busca lançamentos do mês e ano selecionados
+    const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1, 0, 0, 0, 0);
+    const lastDayOfMonth = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59, 999);
 
     const monthEntries = await prisma.ledgerEntry.findMany({
       where: {
         account: { userId: userId },
-        createdAt: { gte: firstDayOfMonth }
+        createdAt: {
+          gte: firstDayOfMonth,
+          lte: lastDayOfMonth
+        }
       },
       include: { transaction: true }
     });
@@ -104,35 +118,43 @@ export default async function HomePage() {
     });
 
     return (
-      <DashboardView
-        userName={userName}
-        accounts={accountsData}
-        monthlyIncome={monthlyIncome}
-        monthlyExpenses={monthlyExpenses}
-        expensesByCategory={expensesByCategoryArray}
-        budgets={budgets}
-        cards={cards}
-        goals={goals}
-        investments={investments}
-      />
+      <Suspense fallback={null}>
+        <DashboardView
+          userName={userName}
+          accounts={accountsData}
+          monthlyIncome={monthlyIncome}
+          monthlyExpenses={monthlyExpenses}
+          expensesByCategory={expensesByCategoryArray}
+          budgets={budgets}
+          cards={cards}
+          goals={goals}
+          investments={investments}
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+        />
+      </Suspense>
     );
   } catch (error) {
     console.error("Erro ao carregar HomePage:", error);
     return (
-      <DashboardView
-        userName="Alexandre Silva"
-        accounts={[
-          { id: "1", name: "Nubank Principal", balance: 0 },
-          { id: "2", name: "Carteira / Dinheiro", balance: 0 }
-        ]}
-        monthlyIncome={0}
-        monthlyExpenses={0}
-        expensesByCategory={[]}
-        budgets={[]}
-        cards={[]}
-        goals={[]}
-        investments={[]}
-      />
+      <Suspense fallback={null}>
+        <DashboardView
+          userName="Alexandre Silva"
+          accounts={[
+            { id: "1", name: "Nubank Principal", balance: 0 },
+            { id: "2", name: "Carteira / Dinheiro", balance: 0 }
+          ]}
+          monthlyIncome={0}
+          monthlyExpenses={0}
+          expensesByCategory={[]}
+          budgets={[]}
+          cards={[]}
+          goals={[]}
+          investments={[]}
+          selectedMonth={new Date().getMonth()}
+          selectedYear={new Date().getFullYear()}
+        />
+      </Suspense>
     );
   }
 }

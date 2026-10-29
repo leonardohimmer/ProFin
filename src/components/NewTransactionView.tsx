@@ -7,17 +7,20 @@ import Link from "next/link";
 interface SelectionItem {
   id: string;
   name: string;
+  type?: string;
 }
 
 interface NewTransactionViewProps {
   categories: SelectionItem[];
   accounts: SelectionItem[];
+  cards?: SelectionItem[];
   defaultType: "CREDIT" | "DEBIT";
 }
 
 export default function NewTransactionView({
   categories,
   accounts,
+  cards,
   defaultType
 }: NewTransactionViewProps) {
   const router = useRouter();
@@ -35,18 +38,99 @@ export default function NewTransactionView({
   const [selectedDestinationAccount, setSelectedDestinationAccount] = useState<SelectionItem | null>(defaultDestAccount);
   const [showDestAccountModal, setShowDestAccountModal] = useState(false);
 
+  const defaultCard = (cards && cards.length > 0) ? cards[0] : { id: "default-card", name: "Premium Visa" };
+  const [selectedCard, setSelectedCard] = useState<SelectionItem | null>(defaultCard);
+  const [showCardModal, setShowCardModal] = useState(false);
+  const [installmentCount, setInstallmentCount] = useState<number>(2);
+
   const [amount, setAmount] = useState("10,00");
   const [isPaid, setIsPaid] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dateOption, setDateOption] = useState<"HOJE" | "ONTEM" | "OUTROS">("HOJE");
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(new Date());
+  const [calendarMonth, setCalendarMonth] = useState<number>(new Date().getMonth());
+  const [calendarYear, setCalendarYear] = useState<number>(new Date().getFullYear());
   const [description, setDescription] = useState("");
+
+  const MONTH_NAMES = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+  const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+  const handleSelectDateOption = (option: "HOJE" | "ONTEM" | "OUTROS") => {
+    if (option === "HOJE") {
+      setDateOption("HOJE");
+      setSelectedDate(new Date());
+    } else if (option === "ONTEM") {
+      setDateOption("ONTEM");
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      setSelectedDate(yesterday);
+    } else {
+      const baseDate = dateOption === "OUTROS" ? selectedDate : new Date();
+      setTempDate(baseDate);
+      setCalendarMonth(baseDate.getMonth());
+      setCalendarYear(baseDate.getFullYear());
+      setShowCalendarModal(true);
+    }
+  };
+
+  const handlePrevMonth = () => {
+    if (calendarMonth === 0) {
+      setCalendarMonth(11);
+      setCalendarYear(prev => prev - 1);
+    } else {
+      setCalendarMonth(prev => prev - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (calendarMonth === 11) {
+      setCalendarMonth(0);
+      setCalendarYear(prev => prev + 1);
+    } else {
+      setCalendarMonth(prev => prev + 1);
+    }
+  };
+
+  const handleConfirmCalendar = () => {
+    setSelectedDate(tempDate);
+    setDateOption("OUTROS");
+    setShowCalendarModal(false);
+  };
   
-  // Tenta selecionar "Carro" como padrão, se existir, senão a primeira
-  const defaultCategory = categories.find(c => c.name === "Carro") || categories[0] || null;
+  const isIncomeCategory = (catName: string) => {
+    const name = catName.toLowerCase();
+    return ["salário", "salario", "investimentos", "freelance", "prêmios", "premios", "cashback", "rendimentos", "outras receitas", "receitas", "vendas"].includes(name);
+  };
+
+  const filteredCategories = categories.filter(cat => {
+    const isIncome = cat.type === "CREDIT" || isIncomeCategory(cat.name);
+    if (type === "CREDIT") {
+      return isIncome;
+    } else {
+      return !isIncome;
+    }
+  });
+
+  // Tenta selecionar "Carro" ou a primeira categoria compatível
+  const defaultCategory = filteredCategories.find(c => c.name === "Carro") || filteredCategories[0] || categories[0] || null;
   const [selectedCategory, setSelectedCategory] = useState<SelectionItem | null>(defaultCategory);
   
   // Tenta selecionar "Caixa" como padrão, se existir, senão a primeira
   const defaultAccount = accounts.find(a => a.name === "Caixa") || accounts[0] || null;
   const [selectedAccount, setSelectedAccount] = useState<SelectionItem | null>(defaultAccount);
+
+  // Atualiza a categoria selecionada sempre que o tipo de transação (Receita/Despesa) mudar
+  React.useEffect(() => {
+    if (type === "TRANSFER") return;
+    const isCurrentValid = filteredCategories.some(c => c.id === selectedCategory?.id);
+    if (!isCurrentValid && filteredCategories.length > 0) {
+      setSelectedCategory(filteredCategories[0]);
+    }
+  }, [type]);
 
   const [observation, setObservation] = useState("");
 
@@ -66,30 +150,42 @@ export default function NewTransactionView({
     setIsLoading(true);
 
     try {
-      // Converte o valor "10,00" para float
-      const parsedAmount = parseFloat(amount.replace(",", "."));
-      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      // Converte o valor exato em centavos digitado no teclado numérico para Reais
+      const centsInt = parseInt(rawValue, 10);
+      if (isNaN(centsInt) || centsInt <= 0) {
         throw new Error("Por favor, digite um valor válido maior que zero.");
       }
+      const parsedAmount = centsInt / 100;
 
-      if (!selectedAccount) {
+      if (!selectedAccount && type !== "CREDIT_CARD") {
         throw new Error("Por favor, selecione uma conta.");
+      }
+
+      let finalDate = new Date();
+      if (dateOption === "ONTEM") {
+        finalDate = new Date();
+        finalDate.setDate(finalDate.getDate() - 1);
+      } else if (dateOption === "OUTROS") {
+        finalDate = selectedDate;
       }
 
       const res = await fetch("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          description: description || (type === "DEBIT" ? "Despesa" : type === "CREDIT" ? "Receita" : "Transferência"),
+          description: description || (type === "DEBIT" ? "Despesa" : type === "CREDIT" ? "Receita" : type === "CREDIT_CARD" ? "Despesa no Cartão" : "Transferência"),
           amount: parsedAmount,
           type: type,
-          accountId: selectedAccount.id,
+          date: finalDate.toISOString(),
+          accountId: selectedAccount?.id || null,
           destinationAccountId: type === "TRANSFER" ? selectedDestinationAccount?.id : null,
+          cardId: type === "CREDIT_CARD" ? selectedCard?.id : null,
           categoryId: type === "TRANSFER" ? null : (selectedCategory?.id || null),
           category: type === "TRANSFER" ? "Transferência" : (selectedCategory?.name || "OUTROS"),
-          paymentType: isInstallment ? "PARCELADO" : "A VISTA",
-          paymentMethod: type === "TRANSFER" ? "TRANSFERENCIA" : (type === "DEBIT" ? "BOLETO" : "PIX"),
-          isPaid: type === "TRANSFER" ? true : isPaid
+          paymentType: isInstallment ? `${installmentCount}X` : "A VISTA",
+          paymentMethod: type === "CREDIT_CARD" ? (selectedCard?.name || "Cartão de Crédito") : (type === "TRANSFER" ? "TRANSFERENCIA" : (type === "DEBIT" ? "BOLETO" : "PIX")),
+          isPaid: type === "TRANSFER" ? true : isPaid,
+          installmentCount: isInstallment ? installmentCount : 1
         })
       });
 
@@ -266,29 +362,33 @@ export default function NewTransactionView({
                   <svg className="form-row-icon" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"></path>
                   </svg>
-                  <span className="form-row-label">Data da despesa</span>
+                  <span className="form-row-label">
+                    Data da {type === "CREDIT" ? "receita" : type === "TRANSFER" ? "transferência" : type === "CREDIT_CARD" ? "compra" : "despesa"}
+                  </span>
                 </div>
                 <div className="date-pills-container">
                   <button 
                     type="button" 
-                    onClick={() => setDateOption("HOJE")} 
+                    onClick={() => handleSelectDateOption("HOJE")} 
                     className={`date-pill ${dateOption === "HOJE" ? "active" : ""}`}
                   >
                     Hoje
                   </button>
                   <button 
                     type="button" 
-                    onClick={() => setDateOption("ONTEM")} 
+                    onClick={() => handleSelectDateOption("ONTEM")} 
                     className={`date-pill ${dateOption === "ONTEM" ? "active" : ""}`}
                   >
                     Ontem
                   </button>
                   <button 
                     type="button" 
-                    onClick={() => setDateOption("OUTROS")} 
+                    onClick={() => handleSelectDateOption("OUTROS")} 
                     className={`date-pill ${dateOption === "OUTROS" ? "active" : ""}`}
                   >
-                    Outros...
+                    {dateOption === "OUTROS" 
+                      ? selectedDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" }) 
+                      : "Outros..."}
                   </button>
                 </div>
               </div>
@@ -338,24 +438,39 @@ export default function NewTransactionView({
                 </div>
               )}
 
-              {/* Conta Selection */}
+              {/* Conta / Cartão Selection */}
               <div className="form-row">
                 <div className="form-row-left">
                   <svg className="form-row-icon" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18-3a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3h18V6z"></path>
                   </svg>
-                  <span className="form-row-label">{type === "TRANSFER" ? "Conta de Origem" : "Conta / Carteira"}</span>
+                  <span className="form-row-label">
+                    {type === "TRANSFER" ? "Conta de Origem" : type === "CREDIT_CARD" ? "Cartão de Crédito" : "Conta / Carteira"}
+                  </span>
                 </div>
-                <div 
-                  className="selection-card-trigger"
-                  onClick={() => setShowAccountModal(true)}
-                >
-                  <div className="selection-card-icon-bg" style={{ backgroundColor: "#14532d" }}>
-                    {selectedAccount?.name[0] || "C"}
+                {type === "CREDIT_CARD" ? (
+                  <div 
+                    className="selection-card-trigger"
+                    onClick={() => setShowCardModal(true)}
+                  >
+                    <div className="selection-card-icon-bg" style={{ backgroundColor: "#0d9488" }}>
+                      💳
+                    </div>
+                    <span className="selection-card-text">{selectedCard?.name || "Selecionar Cartão"}</span>
+                    <span className="selection-card-arrow">&gt;</span>
                   </div>
-                  <span className="selection-card-text">{selectedAccount?.name || "Selecionar Conta"}</span>
-                  <span className="selection-card-arrow">&gt;</span>
-                </div>
+                ) : (
+                  <div 
+                    className="selection-card-trigger"
+                    onClick={() => setShowAccountModal(true)}
+                  >
+                    <div className="selection-card-icon-bg" style={{ backgroundColor: "#14532d" }}>
+                      {selectedAccount?.name[0] || "C"}
+                    </div>
+                    <span className="selection-card-text">{selectedAccount?.name || "Selecionar Conta"}</span>
+                    <span className="selection-card-arrow">&gt;</span>
+                  </div>
+                )}
               </div>
 
               {/* Conta de Destino Selection */}
@@ -431,6 +546,86 @@ export default function NewTransactionView({
                   <span className="switch-slider"></span>
                 </label>
               </div>
+
+              {/* Configurações Expandidas do Parcelamento */}
+              {isInstallment && (
+                <div style={{
+                  padding: "0.85rem",
+                  backgroundColor: "rgba(99, 102, 241, 0.08)",
+                  border: "1px solid rgba(99, 102, 241, 0.25)",
+                  borderRadius: "10px",
+                  marginTop: "0.5rem",
+                  marginBottom: "0.75rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.75rem"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-primary)" }}>
+                      Número de Parcelas
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <button 
+                        type="button"
+                        onClick={() => setInstallmentCount(prev => Math.max(2, prev - 1))}
+                        style={{
+                          width: 28, height: 28, borderRadius: "6px", border: "1px solid var(--border)",
+                          backgroundColor: "rgba(255,255,255,0.08)", color: "#fff", cursor: "pointer",
+                          fontSize: "0.9rem", fontWeight: "bold"
+                        }}
+                      >
+                        -
+                      </button>
+                      <span style={{ fontSize: "0.95rem", fontWeight: "700", minWidth: "30px", textAlign: "center", color: "#c084fc" }}>
+                        {installmentCount}x
+                      </span>
+                      <button 
+                        type="button"
+                        onClick={() => setInstallmentCount(prev => Math.min(24, prev + 1))}
+                        style={{
+                          width: 28, height: 28, borderRadius: "6px", border: "1px solid var(--border)",
+                          backgroundColor: "rgba(255,255,255,0.08)", color: "#fff", cursor: "pointer",
+                          fontSize: "0.9rem", fontWeight: "bold"
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span style={{ display: "block", fontSize: "0.72rem", color: "var(--text-secondary)", marginBottom: "0.25rem" }}>
+                      Plano de Parcelas:
+                    </span>
+                    <select 
+                      className="search-input"
+                      style={{ width: "100%", padding: "0.4rem 0.6rem", borderRadius: "6px", fontSize: "0.8rem" }}
+                      value={installmentCount}
+                      onChange={(e) => setInstallmentCount(Number(e.target.value))}
+                    >
+                      {Array.from({ length: 23 }, (_, i) => i + 2).map((num) => {
+                        const valInCents = parseInt(rawValue, 10) / 100;
+                        const partVal = (valInCents / num).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+                        return (
+                          <option key={num} value={num} style={{ backgroundColor: "#1e293b", color: "#fff" }}>
+                            {num}x de {partVal} (Total: {valInCents.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  <div style={{
+                    fontSize: "0.75rem",
+                    color: "var(--text-secondary)",
+                    padding: "0.5rem",
+                    borderRadius: "6px",
+                    backgroundColor: "rgba(0, 0, 0, 0.2)"
+                  }}>
+                    💡 Serão geradas <strong>{installmentCount} parcelas mensais</strong> de <strong>{((parseInt(rawValue, 10) / 100) / installmentCount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong> na fatura do cartão.
+                  </div>
+                </div>
+              )}
 
               {/* Despesa Fixa */}
               <div className="option-row">
@@ -516,11 +711,11 @@ export default function NewTransactionView({
         <div className="modal-overlay" onClick={() => setShowCategoryModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <span className="modal-title">Selecionar Categoria</span>
+              <span className="modal-title">Selecionar Categoria ({type === "CREDIT" ? "Receita" : "Despesa"})</span>
               <button className="modal-close-btn" onClick={() => setShowCategoryModal(false)}>&times;</button>
             </div>
             <div className="modal-list">
-              {categories.map((cat) => {
+              {filteredCategories.map((cat) => {
                 const isSelected = selectedCategory?.id === cat.id;
                 return (
                   <div 
@@ -602,6 +797,171 @@ export default function NewTransactionView({
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full Calendar Modal Dialog */}
+      {showCalendarModal && (
+        <div className="modal-overlay" onClick={() => setShowCalendarModal(false)}>
+          <div className="calendar-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header" style={{ marginBottom: "0.5rem" }}>
+              <span className="modal-title">Selecionar Data</span>
+              <button className="modal-close-btn" onClick={() => setShowCalendarModal(false)}>&times;</button>
+            </div>
+
+            {/* Navigation & Selectors */}
+            <div className="calendar-header-nav">
+              <button type="button" className="calendar-nav-btn" onClick={handlePrevMonth}>
+                &lt;
+              </button>
+
+              <div className="calendar-month-year-selectors">
+                <select 
+                  className="calendar-select"
+                  value={calendarMonth}
+                  onChange={(e) => setCalendarMonth(Number(e.target.value))}
+                >
+                  {MONTH_NAMES.map((m, idx) => (
+                    <option key={idx} value={idx}>{m}</option>
+                  ))}
+                </select>
+
+                <select 
+                  className="calendar-select"
+                  value={calendarYear}
+                  onChange={(e) => setCalendarYear(Number(e.target.value))}
+                >
+                  {Array.from({ length: 15 }, (_, i) => new Date().getFullYear() - 10 + i).map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button type="button" className="calendar-nav-btn" onClick={handleNextMonth}>
+                &gt;
+              </button>
+            </div>
+
+            {/* Weekdays */}
+            <div className="calendar-weekdays-grid">
+              {WEEKDAYS.map((w, idx) => (
+                <span key={idx}>{w}</span>
+              ))}
+            </div>
+
+            {/* Days Grid */}
+            <div className="calendar-days-grid">
+              {(() => {
+                const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+                const firstDayIndex = new Date(calendarYear, calendarMonth, 1).getDay();
+                const today = new Date();
+
+                const grid = [];
+                for (let i = 0; i < firstDayIndex; i++) {
+                  grid.push(<div key={`empty-${i}`} className="calendar-day-btn empty" />);
+                }
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                  const isToday = 
+                    d === today.getDate() && 
+                    calendarMonth === today.getMonth() && 
+                    calendarYear === today.getFullYear();
+
+                  const isSelected = 
+                    d === tempDate.getDate() && 
+                    calendarMonth === tempDate.getMonth() && 
+                    calendarYear === tempDate.getFullYear();
+
+                  grid.push(
+                    <button
+                      key={`day-${d}`}
+                      type="button"
+                      className={`calendar-day-btn ${isToday ? "today" : ""} ${isSelected ? "selected" : ""}`}
+                      onClick={() => setTempDate(new Date(calendarYear, calendarMonth, d))}
+                    >
+                      {d}
+                    </button>
+                  );
+                }
+                return grid;
+              })()}
+            </div>
+
+            {/* Actions Footer */}
+            <div className="calendar-actions-footer">
+              <button 
+                type="button" 
+                className="calendar-today-link"
+                onClick={() => {
+                  const now = new Date();
+                  setTempDate(now);
+                  setCalendarMonth(now.getMonth());
+                  setCalendarYear(now.getFullYear());
+                }}
+              >
+                Ir para Hoje
+              </button>
+
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <button 
+                  type="button" 
+                  className="numpad-cancel-btn" 
+                  style={{ padding: "0.4rem 0.8rem", borderRadius: "8px", fontSize: "0.8rem" }}
+                  onClick={() => setShowCalendarModal(false)}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="button" 
+                  className="calendar-confirm-btn"
+                  onClick={handleConfirmCalendar}
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Credit Card Selection Modal Dialog */}
+      {showCardModal && (
+        <div className="modal-overlay" onClick={() => setShowCardModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">Selecionar Cartão de Crédito</span>
+              <button className="modal-close-btn" onClick={() => setShowCardModal(false)}>&times;</button>
+            </div>
+            <div className="modal-list">
+              {(cards || []).length === 0 ? (
+                <div style={{ padding: "1.5rem", textAlign: "center", color: "var(--text-secondary)", fontSize: "0.85rem" }}>
+                  Nenhum cartão de crédito cadastrado. <br />
+                  <Link href="/cartoes" style={{ color: "var(--primary)", marginTop: "0.5rem", display: "inline-block", fontWeight: "600" }}>
+                    + Cadastrar Cartão Agora
+                  </Link>
+                </div>
+              ) : (
+                (cards || []).map((card) => {
+                  const isSelected = selectedCard?.id === card.id;
+                  return (
+                    <div 
+                      key={card.id} 
+                      className={`modal-list-item ${isSelected ? "selected" : ""}`}
+                      onClick={() => {
+                        setSelectedCard(card);
+                        setShowCardModal(false);
+                      }}
+                    >
+                      <div className="modal-list-item-icon" style={{ backgroundColor: "#0d9488" }}>
+                        💳
+                      </div>
+                      <span className="account-name">{card.name}</span>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

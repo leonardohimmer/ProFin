@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import QuickAddMenu from "./QuickAddMenu";
 
 interface AccountInfo {
@@ -49,6 +50,8 @@ interface DashboardViewProps {
   cards: CardInfo[];
   goals: GoalInfo[];
   investments: InvestmentInfo[];
+  selectedMonth?: number;
+  selectedYear?: number;
 }
 
 export default function DashboardView({
@@ -60,10 +63,40 @@ export default function DashboardView({
   budgets,
   cards,
   goals,
-  investments
+  investments,
+  selectedMonth,
+  selectedYear
 }: DashboardViewProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [showValues, setShowValues] = useState(true);
   const [activeCardTab, setActiveCardTab] = useState<"abertas" | "fechadas">("abertas");
+
+  const currentMonth = selectedMonth !== undefined ? selectedMonth : new Date().getMonth();
+  const currentYear = selectedYear !== undefined ? selectedYear : new Date().getFullYear();
+
+  const MONTHS = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+  const YEARS = Array.from({ length: 7 }, (_, i) => 2023 + i);
+
+  const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newMonth = e.target.value;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("month", newMonth);
+    params.set("year", currentYear.toString());
+    router.push(`/?${params.toString()}`);
+  };
+
+  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newYear = e.target.value;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("month", currentMonth.toString());
+    params.set("year", newYear);
+    router.push(`/?${params.toString()}`);
+  };
 
   // Filtra as contas normais (Removemos a lógica manual do cartão SX já que agora usamos o modelo de Cartão)
   const bankAccounts = accounts.filter(acc => !acc.name.includes("Cartão"));
@@ -119,11 +152,30 @@ export default function DashboardView({
             <h1 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               Dashboard
             </h1>
-            <div className="select-wrapper">
-              <select className="select-dropdown">
-                <option value="junho">Junho</option>
-                <option value="maio">Maio</option>
-              </select>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.2rem" }}>
+              <div className="select-wrapper">
+                <select 
+                  className="select-dropdown"
+                  value={currentMonth}
+                  onChange={handleMonthChange}
+                >
+                  {MONTHS.map((m, idx) => (
+                    <option key={idx} value={idx}>{m}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="select-wrapper">
+                <select 
+                  className="select-dropdown"
+                  value={currentYear}
+                  onChange={handleYearChange}
+                >
+                  {YEARS.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -208,25 +260,25 @@ export default function DashboardView({
         </div>
       </section>
 
-      {/* Main Dashboard Columns */}
-      <section className="dashboard-content-layout">
-        {/* Left Column (Contas e Cartões) */}
-        <div className="dashboard-left-column">
+      {/* Main Dashboard 3-Column Layout */}
+      <section className="dashboard-main-grid">
+        {/* Column 1: Contas & Cartões de Crédito */}
+        <div className="dashboard-column">
           {/* Card Contas */}
           <div className="panel-card">
             <div className="panel-header">
               <span className="panel-title">Contas</span>
               <div className="panel-actions">
-                <button className="panel-action-btn" style={{ marginRight: "0.5rem" }}>
-                  <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 18, height: 18 }}>
+                <button className="panel-action-btn" style={{ marginRight: "0.5rem" }} title="Filtrar">
+                  <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 16, height: 16 }}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"></path>
                   </svg>
                 </button>
-                <button className="panel-action-btn">
-                  <svg fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ width: 18, height: 18 }}>
+                <Link href="/contas" className="panel-action-btn" title="Gerenciar contas">
+                  <svg fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ width: 16, height: 16 }}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
                   </svg>
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -246,7 +298,6 @@ export default function DashboardView({
                     <span className={`account-value ${acc.balance < 0 ? "negative" : "positive"}`}>
                       {formatValue(acc.balance)}
                     </span>
-                    <button className="account-add-btn">+</button>
                   </div>
                 </div>
               ))}
@@ -269,13 +320,13 @@ export default function DashboardView({
                   onClick={() => setActiveCardTab("abertas")}
                   className={`tab-btn ${activeCardTab === "abertas" ? "active" : ""}`}
                 >
-                  Faturas abertas
+                  Abertas
                 </button>
                 <button 
                   onClick={() => setActiveCardTab("fechadas")}
                   className={`tab-btn ${activeCardTab === "fechadas" ? "active" : ""}`}
                 >
-                  Faturas fechadas
+                  Fechadas
                 </button>
               </div>
             </div>
@@ -284,31 +335,65 @@ export default function DashboardView({
               {cards && cards.length > 0 ? cards.map((card) => (
                 <div className="account-row" key={card.id}>
                   <div className="account-info-group">
-                    <div className="card-logo">VISA</div>
+                    <div className="card-logo" style={{ fontSize: "0.65rem", padding: "2px 5px" }}>VISA</div>
                     <div className="account-name-group">
                       <span className="account-name">{card.name}</span>
-                      <span className="account-type">fecha em {card.dueDate} • final {card.cardNumber.slice(-4)}</span>
+                      <span className="account-type">fecha {card.dueDate} • **{card.cardNumber.slice(-4)}</span>
                     </div>
                   </div>
                   <div className="account-value-group">
-                    <span className="account-value" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.2rem' }}>
+                    <span className="account-value" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.1rem' }}>
                       {formatValue(card.currentInvoice)}
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 400 }}>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 400 }}>
                         limite: {formatValue(card.limit)}
                       </span>
                     </span>
-                    <button className="account-add-btn">+</button>
                   </div>
                 </div>
               )) : (
-                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", textAlign: "center", display: "block", padding: "1rem 0" }}>Nenhum cartão cadastrado.</span>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textAlign: "center", display: "block", padding: "0.5rem 0" }}>Nenhum cartão cadastrado.</span>
               )}
             </div>
 
             <div className="panel-total-row">
-              <span>Total das faturas</span>
+              <span>Total faturas</span>
               <span>{formatValue(totalCreditCardBalance)}</span>
             </div>
+          </div>
+        </div>
+
+        {/* Column 2: Despesas por Categoria & Investimentos */}
+        <div className="dashboard-column">
+          {/* Card Despesas por categoria */}
+          <div className="panel-card">
+            <div className="panel-header">
+              <span className="panel-title">Despesas por categoria</span>
+            </div>
+
+            {expensesByCategory && expensesByCategory.length > 0 ? (
+              <div style={{ marginTop: "0.5rem" }}>
+                {expensesByCategory.slice(0, 5).map((cat) => {
+                  const maxExpense = Math.max(...expensesByCategory.map(e => e.amount), 1);
+                  return (
+                    <div key={cat.name} style={{ marginBottom: "0.6rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.2rem" }}>
+                        <span style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}>{cat.name}</span>
+                        <span style={{ fontSize: "0.8rem", fontWeight: "600" }}>{formatValue(cat.amount)}</span>
+                      </div>
+                      <div className="progress-bar-bg" style={{ height: "5px", backgroundColor: "var(--border)", borderRadius: "4px", overflow: "hidden" }}>
+                        <div className="progress-bar-fill" style={{ width: `${(cat.amount / maxExpense) * 100}%`, backgroundColor: "var(--primary)", height: "100%", borderRadius: "4px" }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state-categories" style={{ padding: "1rem 0.5rem" }}>
+                <div className="empty-state-title" style={{ fontSize: "0.85rem" }}>
+                  Sem despesas neste mês.
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Card Investimentos */}
@@ -318,92 +403,46 @@ export default function DashboardView({
               <Link href="/investimentos" style={{ fontSize: "0.75rem", color: "var(--primary)", textDecoration: "none", fontWeight: 600 }}>Ver tudo</Link>
             </div>
             
-            <div className="account-list" style={{ marginTop: "0.5rem" }}>
-              {investments && investments.length > 0 ? investments.slice(0, 3).map((inv) => (
+            <div className="account-list" style={{ marginTop: "0.25rem" }}>
+              {investments && investments.length > 0 ? investments.slice(0, 4).map((inv) => (
                 <div className="account-row" key={inv.id}>
                   <div className="account-info-group">
-                    <div className="account-icon-wrapper teal">
-                      <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 16, height: 16 }}>
+                    <div className="account-icon-wrapper teal" style={{ width: 26, height: 26 }}>
+                      <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: 14, height: 14 }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"></path>
                       </svg>
                     </div>
                     <div className="account-name-group">
-                      <span className="account-name">{inv.name}</span>
+                      <span className="account-name" style={{ fontSize: "0.82rem" }}>{inv.name}</span>
                     </div>
                   </div>
                   <div className="account-value-group">
-                    <span className="account-value positive">
+                    <span className="account-value positive" style={{ fontSize: "0.82rem" }}>
                       {formatValue(inv.currentValue)}
                     </span>
                   </div>
                 </div>
               )) : (
-                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", textAlign: "center", display: "block", padding: "1rem 0" }}>Nenhum investimento cadastrado.</span>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textAlign: "center", display: "block", padding: "0.5rem 0" }}>Nenhum investimento cadastrado.</span>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Column (Despesas por categoria e Planejamento) */}
-        <div className="despesas-categorias-panel">
-          <div className="panel-card" style={{ display: "flex", flexDirection: "column", maxHeight: "400px", overflowY: "auto" }}>
-            <div className="panel-header">
-              <span className="panel-title">Despesas por categoria</span>
-            </div>
-
-            {expensesByCategory && expensesByCategory.length > 0 ? (
-              <div style={{ marginTop: "1rem", flex: 1 }}>
-                {expensesByCategory.map((cat) => {
-                  const maxExpense = Math.max(...expensesByCategory.map(e => e.amount), 1);
-                  return (
-                    <div key={cat.name} style={{ marginBottom: "1rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
-                        <span style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>{cat.name}</span>
-                        <span style={{ fontSize: "0.85rem", fontWeight: "600" }}>{formatValue(cat.amount)}</span>
-                      </div>
-                      <div className="progress-bar-bg" style={{ height: "6px", backgroundColor: "var(--border)", borderRadius: "4px", overflow: "hidden" }}>
-                        <div className="progress-bar-fill" style={{ width: `${(cat.amount / maxExpense) * 100}%`, backgroundColor: "var(--primary)", height: "100%", borderRadius: "4px" }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="empty-state-categories" style={{ flex: 1, padding: "2rem 1rem" }}>
-                <div className="circle-chart-outline">
-                  <div className="circle-chart-inner">
-                    <svg className="circle-chart-icon" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"></path>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"></path>
-                    </svg>
-                  </div>
-                </div>
-
-                <div className="empty-state-title">
-                  Opa! Você não tem despesas cadastradas esse mês.
-                </div>
-                <div className="empty-state-description">
-                  Adicione seus gastos no mês atual para ver seus gráficos.
-                </div>
-
-                <Link href="/transacoes/nova?type=DEBIT" className="btn-empty-action" style={{ textDecoration: "none" }}>
-                  Começar agora
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <div className="panel-card" style={{ marginTop: "1.5rem" }}>
+        {/* Column 3: Planejamento & Metas */}
+        <div className="dashboard-column">
+          {/* Card Planejamento */}
+          <div className="panel-card">
             <div className="panel-header">
               <span className="panel-title">Planejamento</span>
               <Link href="/planejamento" style={{ fontSize: "0.75rem", color: "var(--primary)", textDecoration: "none", fontWeight: 600 }}>Ver tudo</Link>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", marginTop: "1rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginTop: "0.5rem" }}>
               {budgets && budgets.length > 0 ? [...budgets].sort((a, b) => {
                 const percentA = a.targetAmount > 0 ? (a.spentAmount / a.targetAmount) : 0;
                 const percentB = b.targetAmount > 0 ? (b.spentAmount / b.targetAmount) : 0;
                 return percentB - percentA;
-              }).slice(0, 5).map(b => {
+              }).slice(0, 4).map(b => {
                 const rawPercent = b.targetAmount > 0 ? Math.round((b.spentAmount / b.targetAmount) * 100) : 0;
                 const percent = Math.min(100, rawPercent);
                 
@@ -418,46 +457,47 @@ export default function DashboardView({
 
                 return (
                   <div key={b.id}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-                      <span style={{ fontSize: "0.85rem", color: "var(--text-primary)", fontWeight: 500 }}>{b.categoryName}</span>
-                      <span style={{ fontSize: "0.85rem" }}>
-                        <strong style={{ color: "var(--text-primary)" }}>{formatValue(b.spentAmount)}</strong> de {formatValue(b.targetAmount)}
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.2rem" }}>
+                      <span style={{ fontSize: "0.8rem", color: "var(--text-primary)", fontWeight: 500 }}>{b.categoryName}</span>
+                      <span style={{ fontSize: "0.78rem" }}>
+                        <strong style={{ color: "var(--text-primary)" }}>{formatValue(b.spentAmount)}</strong> / {formatValue(b.targetAmount)}
                       </span>
                     </div>
-                    <div className="progress-bar-bg" style={{ height: "6px", backgroundColor: "var(--border)", borderRadius: "4px", overflow: "hidden" }}>
+                    <div className="progress-bar-bg" style={{ height: "5px", backgroundColor: "var(--border)", borderRadius: "4px", overflow: "hidden" }}>
                       <div className={`progress-bar-fill ${colorClass}`} style={{ width: `${percent}%`, height: "100%", borderRadius: "4px" }} />
                     </div>
                   </div>
                 );
               }) : (
-                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", textAlign: "center", display: "block", padding: "1rem 0" }}>Nenhum planejamento cadastrado.</span>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textAlign: "center", display: "block", padding: "0.5rem 0" }}>Nenhum planejamento cadastrado.</span>
               )}
             </div>
           </div>
 
-          <div className="panel-card" style={{ marginTop: "1.5rem" }}>
+          {/* Card Metas */}
+          <div className="panel-card">
             <div className="panel-header">
               <span className="panel-title">Metas</span>
               <Link href="/metas" style={{ fontSize: "0.75rem", color: "var(--primary)", textDecoration: "none", fontWeight: 600 }}>Ver tudo</Link>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", marginTop: "1rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginTop: "0.5rem" }}>
               {goals && goals.length > 0 ? goals.slice(0, 3).map(g => {
                 const percent = g.targetAmount > 0 ? Math.min(100, Math.round((g.currentAmount / g.targetAmount) * 100)) : 0;
                 return (
                   <div key={g.id}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-                      <span style={{ fontSize: "0.85rem", color: "var(--text-primary)", fontWeight: 500 }}>{g.name}</span>
-                      <span style={{ fontSize: "0.85rem" }}>
-                        <strong style={{ color: "var(--text-primary)" }}>{formatValue(g.currentAmount)}</strong> de {formatValue(g.targetAmount)}
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.2rem" }}>
+                      <span style={{ fontSize: "0.8rem", color: "var(--text-primary)", fontWeight: 500 }}>{g.name}</span>
+                      <span style={{ fontSize: "0.78rem" }}>
+                        <strong style={{ color: "var(--text-primary)" }}>{formatValue(g.currentAmount)}</strong> / {formatValue(g.targetAmount)}
                       </span>
                     </div>
-                    <div className="progress-bar-bg" style={{ height: "6px", backgroundColor: "var(--border)", borderRadius: "4px", overflow: "hidden" }}>
+                    <div className="progress-bar-bg" style={{ height: "5px", backgroundColor: "var(--border)", borderRadius: "4px", overflow: "hidden" }}>
                       <div className="progress-bar-fill" style={{ width: `${percent}%`, backgroundColor: "var(--success)", height: "100%", borderRadius: "4px" }} />
                     </div>
                   </div>
                 );
               }) : (
-                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", textAlign: "center", display: "block", padding: "1rem 0" }}>Nenhuma meta cadastrada.</span>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textAlign: "center", display: "block", padding: "0.5rem 0" }}>Nenhuma meta cadastrada.</span>
               )}
             </div>
           </div>

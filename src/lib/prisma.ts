@@ -1,10 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 
-// Configura fallback programático com as URLs do Supabase (PostgreSQL) caso não estejam no process.env
-if (!process.env.DATABASE_URL) {
+// Configura fallback programático com as URLs do Supabase (PostgreSQL) caso não estejam no process.env ou apontem para SQLite legado
+if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith("file:")) {
   process.env.DATABASE_URL = "postgresql://postgres.bswdsnbxlpgjdiddvdxi:mmcsgq-supabase26@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true";
 }
-if (!process.env.DIRECT_URL) {
+if (!process.env.DIRECT_URL || process.env.DIRECT_URL.startsWith("file:")) {
   process.env.DIRECT_URL = "postgresql://postgres.bswdsnbxlpgjdiddvdxi:mmcsgq-supabase26@aws-0-us-east-1.pooler.supabase.com:5432/postgres";
 }
 
